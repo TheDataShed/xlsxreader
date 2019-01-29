@@ -1,0 +1,38 @@
+### Go ###
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+
+# Test binary, built with `go test -c`
+*.test
+
+### Go Patch ###
+/vendor/
+/Godeps/
+
+### LibreOffice ###
+# LibreOffice locks
+.~lock.*#
+
+### MicrosoftOffice ###
+*.tmp
+
+# Excel temporary
+~$*.xls*
+
+# Excel Backup File
+*.xlk
+
+### VisualStudioCode ###
+.vscode/*
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+
+# Test binary
+test/test
