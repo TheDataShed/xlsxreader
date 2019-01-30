@@ -36,3 +36,6 @@
 
 # Test binary
 test/test
+
+# MacOs
+.DS_Store

@@ -2,6 +2,8 @@ package xlsxreader
 
 import (
 	"archive/zip"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -36,7 +38,7 @@ func TestOpeningMissingFile(t *testing.T) {
 	require.EqualError(t, err, "open this_doesnt_exist.zip: no such file or directory")
 }
 
-func TestOpeningExcelFile(t *testing.T) {
+func TestOpeningXlsxFile(t *testing.T) {
 	actual, err := OpenFile("./test/test-small.xlsx")
 	defer actual.Close()
 
@@ -49,4 +51,16 @@ func TestClosingFile(t *testing.T) {
 	require.NoError(t, err)
 	err = actual.Close()
 	require.NoError(t, err)
+}
+
+func TestNewReaderFromXlsxBytes(t *testing.T) {
+	f, _ := os.Open("./test/test-small.xlsx")
+	defer f.Close()
+
+	b, _ := ioutil.ReadAll(f)
+
+	actual, err := NewReader(b)
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, actual.Sheets)
 }

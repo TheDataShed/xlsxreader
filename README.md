@@ -49,6 +49,18 @@ for row := range e.ReadRows(e.Sheets[0]) {
 }
 ```
 
+If you would like to read an xlsx file you have in memory you can use the example below.
+```go
+f, _ := os.Open("./test/test-small.xlsx")
+defer f.Close()
+b, _ := ioutil.ReadAll(f)
+
+e, _ := xlsxreader.NewReader(b)
+
+for row := range e.ReadRows(e.Sheets[0]) {
+    ...
+}
+```
 
 That’s it! Just a couple of lines to read the content of an excel file.
 

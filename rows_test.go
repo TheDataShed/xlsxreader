@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testFile = ExcelFile{
+var testFile = XlsxFile{
 	Sheets:        []string{"worksheetOne", "worksheetTwo"},
 	sharedStrings: []string{"one", "two", "three", "FLOOR!"},
 	dateStyles:    map[int]bool{1: true, 3: true},

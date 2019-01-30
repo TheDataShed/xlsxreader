@@ -12,7 +12,7 @@ type sharedStrings struct {
 }
 
 // getSharedStringsFile attempts to find and return the zip.File struct associated with the
-// shared strings section of an excel file. An error is returned if the sharedStrings file
+// shared strings section of an xlsx file. An error is returned if the sharedStrings file
 // does not exist, or cannot be found.
 func getSharedStringsFile(files []*zip.File) (*zip.File, error) {
 	for _, file := range files {
