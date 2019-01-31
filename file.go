@@ -7,14 +7,20 @@ import (
 	"io"
 )
 
-// ExcelFile defines a populated XLSX file struct.
-type ExcelFile struct {
+// XlsxFile defines a populated XLSX file struct.
+type XlsxFile struct {
 	Sheets []string
 
+	zipReader     *zip.Reader
 	sheetFiles    map[string]*zip.File
 	sharedStrings []string
-	zipFile       zip.ReadCloser
 	dateStyles    map[int]bool
+}
+
+// XlsxFileCloser wraps XlsxFile to be able to close an open file
+type XlsxFileCloser struct {
+	zipReadCloser zip.ReadCloser
+	XlsxFile
 }
 
 // getFileForName finds and returns a *zip.File by it's display name from within an archive.
@@ -46,41 +52,72 @@ func readFile(file *zip.File) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// Close closes the ExcelFile, rendering it unusable for I/O.
-func (e *ExcelFile) Close() error {
-	return e.zipFile.Close()
+// Close closes the XlsxFile, rendering it unusable for I/O.
+func (xl *XlsxFileCloser) Close() error {
+	return xl.zipReadCloser.Close()
 }
 
-// OpenFile takes the name of an XLSX file and returns a populated ExcelFile struct for it.
+// OpenFile takes the name of an XLSX file and returns a populated XlsxFile struct for it.
 // If the file cannot be found, or key parts of the files contents are missing, an error
 // is returned.
 // Note that the file must be Close()-d when you are finished with it.
-func OpenFile(filename string) (*ExcelFile, error) {
+func OpenFile(filename string) (*XlsxFileCloser, error) {
 	zipFile, err := zip.OpenReader(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	sharedStrings, err := getSharedStrings(zipFile.File)
-	if err != nil {
+	x := new(XlsxFile)
+
+	if err := x.init(zipFile.Reader); err != nil {
+		zipFile.Close()
 		return nil, err
 	}
 
-	sheets, sheetFiles, err := getWorksheets(zipFile.File)
-	if err != nil {
-		return nil, err
-	}
-
-	dateStyles, err := getDateFormatStyles(zipFile.File)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ExcelFile{
-		sharedStrings: sharedStrings,
-		Sheets:        sheets,
-		sheetFiles:    *sheetFiles,
-		zipFile:       *zipFile,
-		dateStyles:    *dateStyles,
+	return &XlsxFileCloser{
+		XlsxFile:      *x,
+		zipReadCloser: *zipFile,
 	}, nil
+}
+
+// NewReader takes bytes of Xlsx file and returns a populated XlsxFile struct for it.
+// If the file cannot be found, or key parts of the files contents are missing, an error
+// is returned.
+func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
+	r, err := zip.NewReader(bytes.NewReader(xlsxBytes), int64(len(xlsxBytes)))
+	if err != nil {
+		return nil, err
+	}
+
+	x := new(XlsxFile)
+	err = x.init(*r)
+	if err != nil {
+		return nil, err
+	}
+
+	return x, nil
+}
+
+func (x *XlsxFile) init(zipReader zip.Reader) error {
+	sharedStrings, err := getSharedStrings(zipReader.File)
+	if err != nil {
+		return err
+	}
+
+	sheets, sheetFiles, err := getWorksheets(zipReader.File)
+	if err != nil {
+		return err
+	}
+
+	dateStyles, err := getDateFormatStyles(zipReader.File)
+	if err != nil {
+		return err
+	}
+
+	x.sharedStrings = sharedStrings
+	x.Sheets = sheets
+	x.sheetFiles = *sheetFiles
+	x.dateStyles = *dateStyles
+
+	return nil
 }

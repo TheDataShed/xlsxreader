@@ -6,6 +6,8 @@
 *.so
 *.dylib
 *.out
+c.out
+coverage.html
 
 # Test binary, built with `go test -c`
 *.test
@@ -36,3 +38,6 @@
 
 # Test binary
 test/test
+
+# MacOs
+.DS_Store

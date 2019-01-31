@@ -22,7 +22,7 @@ type rawCell struct {
 	InlineString *string `xml:"is>t"`
 }
 
-// Row represents a row of data read from an excel file, in a consumable format
+// Row represents a row of data read from an Xlsx file, in a consumable format
 type Row struct {
 	Error error
 	Index int
@@ -40,7 +40,7 @@ type Cell struct {
 // Numerical values are returned in their string format.
 // Dates are returned as an ISO YYYY-MM-DD formatted string.
 // Datetimes are returned in RFC3339 (ISO-8601) YYYY-MM-DDTHH:MM:SSZ formated string.
-func (e *ExcelFile) getCellValue(r rawCell) (string, error) {
+func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 	if r.Type == "inlineStr" {
 		if r.InlineString == nil {
 			return "", fmt.Errorf("Cell had type of InlineString, but the InlineString attribute was missing")
@@ -52,7 +52,7 @@ func (e *ExcelFile) getCellValue(r rawCell) (string, error) {
 		return "", fmt.Errorf("Unable to get cell value for cell %s - no value element found", r.Reference)
 	}
 
-	if e.dateStyles[r.Style] {
+	if x.dateStyles[r.Style] {
 		formattedDate, err := convertExcelDateToDateString(*r.Value)
 		if err != nil {
 			return "", err
@@ -65,12 +65,12 @@ func (e *ExcelFile) getCellValue(r rawCell) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if len(e.sharedStrings) <= index {
+		if len(x.sharedStrings) <= index {
 			return "", fmt.Errorf("Attempted to index value %d in shared strings of length %d",
-				index, len(e.sharedStrings))
+				index, len(x.sharedStrings))
 		}
 
-		return e.sharedStrings[index], nil
+		return x.sharedStrings[index], nil
 
 	}
 
@@ -79,10 +79,10 @@ func (e *ExcelFile) getCellValue(r rawCell) (string, error) {
 
 // readSheetRows iterates over "row" elements within a worksheet,
 // pushing a parsed Row struct into a channel for each one.
-func (e *ExcelFile) readSheetRows(sheet string, ch chan<- Row) {
+func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 	defer close(ch)
 
-	file, ok := e.sheetFiles[sheet]
+	file, ok := x.sheetFiles[sheet]
 	if !ok {
 		ch <- Row{
 			Error: fmt.Errorf("Unable to open sheet %s", sheet),
@@ -110,7 +110,7 @@ func (e *ExcelFile) readSheetRows(sheet string, ch chan<- Row) {
 
 		case xml.StartElement:
 			if startElement.Name.Local == "row" {
-				row := e.parseRow(decoder, &startElement)
+				row := x.parseRow(decoder, &startElement)
 				if len(row.Cells) < 1 && row.Error == nil {
 					continue
 				}
@@ -123,7 +123,7 @@ func (e *ExcelFile) readSheetRows(sheet string, ch chan<- Row) {
 // parseRow parses the raw XML of a row element into a consumable Row struct.
 // The Row struct returned will contain any errors that occurred either in
 // interrogating values, or in parsing the XML.
-func (e *ExcelFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement) Row {
+func (x *XlsxFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement) Row {
 	r := rawRow{}
 	err := decoder.DecodeElement(&r, startElement)
 	if err != nil {
@@ -133,7 +133,7 @@ func (e *ExcelFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElemen
 		}
 	}
 
-	cells, err := e.parseRawCells(r.RawCells, r.Index)
+	cells, err := x.parseRawCells(r.RawCells, r.Index)
 	if err != nil {
 		return Row{
 			Error: err,
@@ -149,7 +149,7 @@ func (e *ExcelFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElemen
 // parseRawCells converts a slice of structs containing a raw representation of the XML into
 // a standardised slice of Cell structs. An error will be returned if it is not possible
 // to interpret the value of any of the cells.
-func (e *ExcelFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) {
+func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) {
 	cells := []Cell{}
 	for _, rawCell := range rawCells {
 		if rawCell.Value == nil && rawCell.InlineString == nil {
@@ -157,7 +157,7 @@ func (e *ExcelFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error)
 			continue
 		}
 		column := strings.Map(removeNonAlpha, rawCell.Reference)
-		val, err := e.getCellValue(rawCell)
+		val, err := x.getCellValue(rawCell)
 		if err != nil {
 			return nil, err
 		}
@@ -173,15 +173,20 @@ func (e *ExcelFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error)
 }
 
 // ReadRows provides an interface allowing rows from a specific worksheet to be streamed
-// from an excel file.
+// from an xlsx file.
 // In order to provide a simplistic interface, this method returns a channel that can be
 // range-d over.
+//
 // This method has one notable drawback however - the entire file must be consumed before
 // the channel will be closed. Reading only some of the values will leave an orphaned
 // goroutine and channel behind.
-func (e *ExcelFile) ReadRows(sheet string) chan Row {
+//
+// Notes:
+// Xlsx sheets may omit cells which are empty, meaning a row may not have continuous cell
+// references. This function makes not attempt to fill/pad the missing cells.
+func (x *XlsxFile) ReadRows(sheet string) chan Row {
 	rowChannel := make(chan Row)
-	go e.readSheetRows(sheet, rowChannel)
+	go x.readSheetRows(sheet, rowChannel)
 	return rowChannel
 }
 
