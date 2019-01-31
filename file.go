@@ -53,8 +53,8 @@ func readFile(file *zip.File) ([]byte, error) {
 }
 
 // Close closes the XlsxFile, rendering it unusable for I/O.
-func (e *XlsxFileCloser) Close() error {
-	return e.zipReadCloser.Close()
+func (xl *XlsxFileCloser) Close() error {
+	return xl.zipReadCloser.Close()
 }
 
 // OpenFile takes the name of an XLSX file and returns a populated XlsxFile struct for it.
