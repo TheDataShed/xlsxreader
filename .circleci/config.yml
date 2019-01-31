@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: golang:latest
 
-    working_directory: /go/src/github.com/thedatashed/xlsxreader
+    working_directory: ~/repo/
     steps:
       - checkout
       - run: go get -v -d ./...
