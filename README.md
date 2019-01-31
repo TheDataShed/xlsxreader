@@ -1,6 +1,6 @@
 # xlsxreader : Go package for reading data from an xlsx file
 
-## Overview [![GoDoc](https://godoc.org/github.com/thedatashed/xlsxreader?status.svg)](https://godoc.org/github.com/thedatashed/xlsxreader) [![CircleCI](https://circleci.com/gh/TheDataShed/xlsxreader.svg?style=shield&circle-token=278b8226f604014c183d01a96d4eb6ead9d0bc79)](/)
+## Overview [![GoDoc](https://godoc.org/github.com/thedatashed/xlsxreader?status.svg)](https://godoc.org/github.com/thedatashed/xlsxreader) [![CircleCI](https://circleci.com/gh/TheDataShed/xlsxreader.svg?style=shield&circle-token=278b8226f604014c183d01a96d4eb6ead9d0bc79)](https://github.com/TheDataShed/xlsxreader)
 
 A low-memory high performance library for reading data from an xlsx file.
 
