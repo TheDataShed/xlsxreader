@@ -144,7 +144,7 @@ var parseRawCellsTests = []struct {
 		Name:  "Invalid Cell",
 		Error: "Cell had type of InlineString, but the InlineString attribute was missing",
 		RawCells: []rawCell{
-			rawCell{Type: "inlineStr", InlineString: nil, Value: &inlineStr},
+			{Type: "inlineStr", InlineString: nil, Value: &inlineStr},
 		},
 	},
 	{
@@ -157,12 +157,12 @@ var parseRawCellsTests = []struct {
 		Name:  "Valid Cells",
 		Index: 123,
 		RawCells: []rawCell{
-			rawCell{Reference: "D123", Type: "inlineStr", InlineString: &inlineStr},
-			rawCell{Reference: "E123", Type: "inlineStr", InlineString: &inlineStr},
+			{Reference: "D123", Type: "inlineStr", InlineString: &inlineStr},
+			{Reference: "E123", Type: "inlineStr", InlineString: &inlineStr},
 		},
 		Expected: []Cell{
-			Cell{Column: "D", Row: 123, Value: "The meaning of life"},
-			Cell{Column: "E", Row: 123, Value: "The meaning of life"},
+			{Column: "D", Row: 123, Value: "The meaning of life"},
+			{Column: "E", Row: 123, Value: "The meaning of life"},
 		},
 	},
 }
@@ -193,20 +193,20 @@ func TestReadingFileContents(t *testing.T) {
 	}
 
 	require.Equal(t, []Row{
-		Row{Index: 1, Cells: []Cell{
-			Cell{Column: "A", Row: 1, Value: "rec_id"},
-			Cell{Column: "B", Row: 1, Value: "culture"},
-			Cell{Column: "C", Row: 1, Value: "sex"},
+		{Index: 1, Cells: []Cell{
+			{Column: "A", Row: 1, Value: "rec_id"},
+			{Column: "B", Row: 1, Value: "culture"},
+			{Column: "C", Row: 1, Value: "sex"},
 		}},
-		Row{Index: 2, Cells: []Cell{
-			Cell{Column: "A", Row: 2, Value: "rec-67374-org"},
-			Cell{Column: "B", Row: 2, Value: "usa"},
-			Cell{Column: "C", Row: 2, Value: "f"},
+		{Index: 2, Cells: []Cell{
+			{Column: "A", Row: 2, Value: "rec-67374-org"},
+			{Column: "B", Row: 2, Value: "usa"},
+			{Column: "C", Row: 2, Value: "f"},
 		}},
-		Row{Index: 3, Cells: []Cell{
-			Cell{Column: "A", Row: 3, Value: "rec-171273-org"},
-			Cell{Column: "B", Row: 3, Value: "ara"},
-			Cell{Column: "C", Row: 3, Value: "m"},
+		{Index: 3, Cells: []Cell{
+			{Column: "A", Row: 3, Value: "rec-171273-org"},
+			{Column: "B", Row: 3, Value: "ara"},
+			{Column: "C", Row: 3, Value: "m"},
 		}},
 	}, rows)
 }

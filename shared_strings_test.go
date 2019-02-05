@@ -9,9 +9,9 @@ import (
 
 func TestGetSharedStringsFile(t *testing.T) {
 	zipFiles := []*zip.File{
-		&zip.File{FileHeader: zip.FileHeader{Name: "Bill"}},
-		&zip.File{FileHeader: zip.FileHeader{Name: "xl/SharedStrings.xml"}},
-		&zip.File{FileHeader: zip.FileHeader{Name: "Bob"}},
+		{FileHeader: zip.FileHeader{Name: "Bill"}},
+		{FileHeader: zip.FileHeader{Name: "xl/SharedStrings.xml"}},
+		{FileHeader: zip.FileHeader{Name: "Bob"}},
 	}
 
 	file, err := getSharedStringsFile(zipFiles)
