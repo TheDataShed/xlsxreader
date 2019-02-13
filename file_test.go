@@ -11,10 +11,10 @@ import (
 
 func TestGettingFileByNameSuccess(t *testing.T) {
 	zipFiles := []*zip.File{
-		&zip.File{FileHeader: zip.FileHeader{Name: "Bill"}},
-		&zip.File{FileHeader: zip.FileHeader{Name: "Bobby"}},
-		&zip.File{FileHeader: zip.FileHeader{Name: "Bob"}},
-		&zip.File{FileHeader: zip.FileHeader{Name: "Ben"}},
+		{FileHeader: zip.FileHeader{Name: "Bill"}},
+		{FileHeader: zip.FileHeader{Name: "Bobby"}},
+		{FileHeader: zip.FileHeader{Name: "Bob"}},
+		{FileHeader: zip.FileHeader{Name: "Ben"}},
 	}
 
 	file, err := getFileForName(zipFiles, "Bob")
