@@ -74,7 +74,7 @@ func main() {
 The reader operates on a single file and will read data from the specified file using the `OpenFile` function.
 
 ### Data
-The Reader can also be instantiated with a byte array by using the `CreateReader` function.
+The Reader can also be instantiated with a byte array by using the `NewReader` function.
 
 ### Sheets
 An xlsx workbook can contain many worksheets, when reading data, the target sheet name should be passed. To process multiple sheets, either iterate on the array of sheet names identified by the reader or make multiple calls to the `ReadRows` function with the desired sheet names.
