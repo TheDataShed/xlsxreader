@@ -18,6 +18,7 @@ var dateValue = "43489.25"
 var invalidValue = "wat"
 var sharedString = "2"
 var offsetTooHighSharedString = "32"
+var dateString = "2005-06-04"
 
 var cellValueTests = []struct {
 	Name     string
@@ -64,6 +65,11 @@ var cellValueTests = []struct {
 		Name:     "Unknown type",
 		Cell:     rawCell{Type: "potato", Value: &inlineStr},
 		Expected: inlineStr,
+	},
+	{
+		Name:     "Date type",
+		Cell:     rawCell{Type: "d", Style: 1, Value: &dateString},
+		Expected: dateString,
 	},
 	{
 		Name:  "No Inline String or Value",

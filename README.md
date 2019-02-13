@@ -4,7 +4,9 @@
 
 A low-memory high performance library for reading data from an xlsx file.
 
-Suitable for reading .xlsx data, designed aid the bulk upload of data stored in .xlsx format, where the key requirement is to parse and read the raw data. The reader will read data out row by row (1->n) and has no concept of headers or data types (this is to be managed by the consumer).
+Suitable for reading .xlsx data and designed to aid with the bulk uploading of data where the key requirement is to parse and read raw data.
+
+The reader will read data out row by row (1->n) and has no concept of headers or data types (this is to be managed by the consumer).
 
 The reader is currently not concerned with handling some of the more advanced cell data that can be stored in a xlsx file.
 
@@ -29,7 +31,7 @@ import (
 func main() {
     // Create an instance of the reader by opening a target file
     xl, _ := xlsxreader.OpenFile("./test.xlsx")
-    
+
     // Ensure the file reader is closed once utilised
     defer xl.Close()
 
@@ -58,7 +60,7 @@ func main() {
 
     // Create an instance of the reader by providing a data stream
     xl, _ := xlsxreader.NewReader(bytes)
-    
+
     // Iterate on the rows of data
     for row := range xl.ReadRows(e.Sheets[0]){
     ...
