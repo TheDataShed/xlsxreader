@@ -8,7 +8,7 @@ Suitable for reading .xlsx data, designed aid the bulk upload of data stored in 
 
 The reader is currently not concerned with handling some of the more advanced cell data that can be stored in a xlsx file.
 
-Further reading can be found on our [blog](blog)
+Further reading on how this came to be is available on our [blog](https://www.thedatashed.co.uk/2019/02/13/go-shedsheet-reader/)
 
 ## Install
 
