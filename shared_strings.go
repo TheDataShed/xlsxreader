@@ -8,7 +8,10 @@ import (
 
 // sharedStrings is a struct that holds the values of the shared strings.
 type sharedStrings struct {
-	Values []string `xml:"si>t"`
+	Values []struct {
+		Value  string `xml:"t"`
+		RValue string `xml:"r>t"`
+	} `xml:"si"`
 }
 
 // getSharedStringsFile attempts to find and return the zip.File struct associated with the
@@ -22,6 +25,25 @@ func getSharedStringsFile(files []*zip.File) (*zip.File, error) {
 	}
 
 	return nil, errors.New("Unable to locate shared strings file")
+}
+
+// getPopulatedValues gets a list of string values from the raw sharedStrings struct.
+// Since the values can appear in two different places in the xml structure, we need to normalise this.
+// They can either be:
+// <si> <t> value </t> </si>  or
+// <si> <r> <t> value </t> </r> </si>
+func getPopulatedValues(ss sharedStrings) []string {
+	populated := make([]string, len(ss.Values))
+
+	for i, val := range ss.Values {
+		if val.Value == "" {
+			populated[i] = val.RValue
+		} else {
+			populated[i] = val.Value
+		}
+	}
+
+	return populated
 }
 
 // getSharedStrings loads the contents of the shared string file into memory.
@@ -42,5 +64,5 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 		return nil, err
 	}
 
-	return ss.Values, nil
+	return getPopulatedValues(ss), nil
 }

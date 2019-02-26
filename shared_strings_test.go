@@ -26,10 +26,19 @@ func TestErrorReturnedIfNoSharedStringsFile(t *testing.T) {
 	require.EqualError(t, err, "Unable to locate shared strings file")
 }
 
-func TestLoadingSharedStrings(t *testing.T) {
-	actual, err := OpenFile("./test/test-shared-strings.xlsx")
-	defer actual.Close()
+var sharedStringsTests = map[string]string{
+	"Simple shared strings":                         "./test/test-shared-strings.xlsx",
+	"Shared strings with spurious element location": "./test/test-shared-strings-with-r-element.xlsx",
+}
 
-	require.NoError(t, err)
-	require.Equal(t, []string{"rec_id", "culture", "sex"}, actual.sharedStrings)
+func TestLoadingSharedStrings(t *testing.T) {
+	for name, filename := range sharedStringsTests {
+		t.Run(name, func(t *testing.T) {
+			actual, err := OpenFile(filename)
+			defer actual.Close()
+
+			require.NoError(t, err)
+			require.Equal(t, []string{"rec_id", "culture", "sex"}, actual.sharedStrings)
+		})
+	}
 }
