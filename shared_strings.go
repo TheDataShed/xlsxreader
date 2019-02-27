@@ -4,13 +4,14 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"errors"
+	"strings"
 )
 
 // sharedStrings is a struct that holds the values of the shared strings.
 type sharedStrings struct {
 	Values []struct {
-		Value  string `xml:"t"`
-		RValue string `xml:"r>t"`
+		Text     string   `xml:"t"`
+		RichText []string `xml:"r>t"`
 	} `xml:"si"`
 }
 
@@ -28,19 +29,22 @@ func getSharedStringsFile(files []*zip.File) (*zip.File, error) {
 }
 
 // getPopulatedValues gets a list of string values from the raw sharedStrings struct.
-// Since the values can appear in two different places in the xml structure, we need to normalise this.
+// Since the values can appear in many different places in the xml structure, we need to normalise this.
 // They can either be:
-// <si> <t> value </t> </si>  or
-// <si> <r> <t> value </t> </r> </si>
+// <si> <t> value </t> </si>
+// or
+// <si> <r> <t> val </t> </r> <r> <t> ue </t> </r> </si>
 func getPopulatedValues(ss sharedStrings) []string {
 	populated := make([]string, len(ss.Values))
 
 	for i, val := range ss.Values {
-		if val.Value == "" {
-			populated[i] = val.RValue
-		} else {
-			populated[i] = val.Value
+		var sb strings.Builder
+
+		sb.WriteString(val.Text)
+		for _, t := range val.RichText {
+			sb.WriteString(t)
 		}
+		populated[i] = sb.String()
 	}
 
 	return populated
