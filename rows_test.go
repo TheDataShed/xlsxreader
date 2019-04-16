@@ -47,6 +47,11 @@ var cellValueTests = []struct {
 		Expected: "2019-01-24T06:00:00Z",
 	},
 	{
+		Name:     "Date style but shared string type",
+		Cell:     rawCell{Type: "s", Value: &sharedString, Style: 1},
+		Expected: "three",
+	},
+	{
 		Name:  "Invalid Date",
 		Cell:  rawCell{Type: "n", Value: &invalidValue, Style: 1},
 		Error: "strconv.ParseFloat: parsing \"wat\": invalid syntax",

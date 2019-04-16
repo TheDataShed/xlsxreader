@@ -52,14 +52,6 @@ func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 		return "", fmt.Errorf("Unable to get cell value for cell %s - no value element found", r.Reference)
 	}
 
-	if x.dateStyles[r.Style] && r.Type != "d" {
-		formattedDate, err := convertExcelDateToDateString(*r.Value)
-		if err != nil {
-			return "", err
-		}
-		return formattedDate, nil
-	}
-
 	if r.Type == "s" {
 		index, err := strconv.Atoi(*r.Value)
 		if err != nil {
@@ -71,7 +63,14 @@ func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 		}
 
 		return x.sharedStrings[index], nil
+	}
 
+	if x.dateStyles[r.Style] && r.Type != "d" {
+		formattedDate, err := convertExcelDateToDateString(*r.Value)
+		if err != nil {
+			return "", err
+		}
+		return formattedDate, nil
 	}
 
 	return *r.Value, nil
