@@ -64,3 +64,11 @@ func TestNewReaderFromXlsxBytes(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, actual.Sheets)
 }
+
+func TestDeletedSheet(t *testing.T) {
+	actual, err := OpenFile("./test/test-deleted-sheet.xlsx")
+
+	require.NoError(t, err)
+	err = actual.Close()
+	require.NoError(t, err)
+}
