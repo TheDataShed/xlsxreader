@@ -15,6 +15,9 @@ type sharedStrings struct {
 	} `xml:"si"`
 }
 
+// Sentinel error to indicate that no shared strings file can be found
+var errNoSharedStrings = errors.New("No shared strings file exists")
+
 // getSharedStringsFile attempts to find and return the zip.File struct associated with the
 // shared strings section of an xlsx file. An error is returned if the sharedStrings file
 // does not exist, or cannot be found.
@@ -25,7 +28,7 @@ func getSharedStringsFile(files []*zip.File) (*zip.File, error) {
 		}
 	}
 
-	return nil, errors.New("Unable to locate shared strings file")
+	return nil, errNoSharedStrings
 }
 
 // getPopulatedValues gets a list of string values from the raw sharedStrings struct.
@@ -54,6 +57,10 @@ func getPopulatedValues(ss sharedStrings) []string {
 // This serves as a large lookup table of values, so we can efficiently parse rows.
 func getSharedStrings(files []*zip.File) ([]string, error) {
 	ssFile, err := getSharedStringsFile(files)
+	if err != nil && errors.Is(err, errNoSharedStrings) {
+		// Valid to contain no shared strings
+		return []string{}, nil
+	}
 	if err != nil {
 		return nil, err
 	}
