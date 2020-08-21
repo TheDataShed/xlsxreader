@@ -20,10 +20,11 @@ func TestGetSharedStringsFile(t *testing.T) {
 	require.Equal(t, zipFiles[1], file)
 }
 
-func TestErrorReturnedIfNoSharedStringsFile(t *testing.T) {
-	_, err := getSharedStringsFile([]*zip.File{})
+func TestNoErrorReturnedIfNoSharedStringsFile(t *testing.T) {
+	actual, err := getSharedStrings([]*zip.File{})
 
-	require.EqualError(t, err, "Unable to locate shared strings file")
+	require.NoError(t, err)
+	require.Equal(t, actual, []string{})
 }
 
 var sharedStringsTests = map[string]string{
