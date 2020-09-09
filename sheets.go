@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
+	"strings"
 )
 
 // workbook is a struct representing the data we care about from the workbook.xml file.
@@ -30,6 +31,11 @@ type relationship struct {
 func getFileNameFromRelationships(rels []relationship, s sheet) (string, error) {
 	for _, rel := range rels {
 		if rel.ID == s.RelationshipID {
+			if strings.HasPrefix(rel.Target, "/") {
+				// path is absolute, take all but the leading slash
+				return rel.Target[1:], nil
+			}
+			// path is relative, so needs xl/ adding
 			return "xl/" + rel.Target, nil
 		}
 	}

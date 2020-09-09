@@ -38,10 +38,14 @@ func TestOpeningMissingFile(t *testing.T) {
 	require.EqualError(t, err, "open this_doesnt_exist.zip: no such file or directory")
 }
 
+func TestHandlingSpuriousWorkbookLinks(t *testing.T) {
+	f, err := OpenFile("./test/test-xl-relationship-prefix.xlsx")
+	defer f.Close()
+	require.NoError(t, err)
+}
+
 func TestOpeningXlsxFile(t *testing.T) {
 	actual, err := OpenFile("./test/test-small.xlsx")
-	defer actual.Close()
-
 	require.NoError(t, err)
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, actual.Sheets)
 }
