@@ -54,6 +54,9 @@ func readFile(file *zip.File) ([]byte, error) {
 
 // Close closes the XlsxFile, rendering it unusable for I/O.
 func (xl *XlsxFileCloser) Close() error {
+	if xl == nil {
+		return nil
+	}
 	return xl.zipReadCloser.Close()
 }
 

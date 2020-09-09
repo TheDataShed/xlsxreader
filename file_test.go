@@ -33,7 +33,8 @@ func TestGettingFileByNameFailure(t *testing.T) {
 }
 
 func TestOpeningMissingFile(t *testing.T) {
-	_, err := OpenFile("this_doesnt_exist.zip")
+	f, err := OpenFile("this_doesnt_exist.zip")
+	defer f.Close()
 
 	require.EqualError(t, err, "open this_doesnt_exist.zip: no such file or directory")
 }
@@ -45,9 +46,11 @@ func TestHandlingSpuriousWorkbookLinks(t *testing.T) {
 }
 
 func TestOpeningXlsxFile(t *testing.T) {
-	actual, err := OpenFile("./test/test-small.xlsx")
+	f, err := OpenFile("./test/test-small.xlsx")
+	defer f.Close()
+
 	require.NoError(t, err)
-	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, actual.Sheets)
+	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, f.Sheets)
 }
 
 func TestClosingFile(t *testing.T) {
