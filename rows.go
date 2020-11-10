@@ -36,6 +36,10 @@ type Cell struct {
 	Value  string
 }
 
+func (c Cell) ColumnIndex() int {
+	return asIndex(c.Column)
+}
+
 // getCellValue interrogates a raw cell to get a textual representation of the cell's contents.
 // Numerical values are returned in their string format.
 // Dates are returned as an ISO YYYY-MM-DD formatted string.
@@ -202,4 +206,14 @@ func removeNonAlpha(r rune) rune {
 	}
 	// drop the rune
 	return -1
+}
+
+// cell name to cell index. 'A' -> 0, 'Z' -> 25, 'AA' -> 26
+func asIndex(s string) int {
+	index := 0
+	for _, c := range []rune(s) {
+		index *= 26
+		index += int(c) - 'A' + 1
+	}
+	return index - 1
 }
