@@ -43,7 +43,7 @@ func (c Cell) ColumnIndex() int {
 // getCellValue interrogates a raw cell to get a textual representation of the cell's contents.
 // Numerical values are returned in their string format.
 // Dates are returned as an ISO YYYY-MM-DD formatted string.
-// Datetimes are returned in RFC3339 (ISO-8601) YYYY-MM-DDTHH:MM:SSZ formated string.
+// Datetimes are returned in RFC3339 (ISO-8601) YYYY-MM-DDTHH:MM:SSZ formatted string.
 func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 	if r.Type == "inlineStr" {
 		if r.InlineString == nil {
@@ -186,7 +186,7 @@ func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) 
 //
 // Notes:
 // Xlsx sheets may omit cells which are empty, meaning a row may not have continuous cell
-// references. This function makes not attempt to fill/pad the missing cells.
+// references. This function makes no attempt to fill/pad the missing cells.
 func (x *XlsxFile) ReadRows(sheet string) chan Row {
 	rowChannel := make(chan Row)
 	go x.readSheetRows(sheet, rowChannel)
