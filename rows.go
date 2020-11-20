@@ -34,7 +34,17 @@ type Cell struct {
 	Column string // E.G   A, B, C
 	Row    int
 	Value  string
+	Type   CellType
 }
+
+type CellType string
+
+const (
+	TypeString    CellType = "string"
+	TypeNumerical CellType = "numerical"
+	TypeDateTime  CellType = "datetime"
+	TypeBoolean   CellType = "boolean"
+)
 
 // getCellValue interrogates a raw cell to get a textual representation of the cell's contents.
 // Numerical values are returned in their string format.
@@ -74,6 +84,26 @@ func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 	}
 
 	return *r.Value, nil
+}
+
+func (x *XlsxFile) getCellType(r rawCell) CellType {
+	if x.dateStyles[r.Style] {
+		return TypeDateTime
+	}
+
+	switch r.Type {
+	case "b":
+		return TypeBoolean
+	case "d":
+		return TypeDateTime
+	case "n", "":
+		return TypeNumerical
+	case "s",
+		"inlineStr":
+		return TypeString
+	default:
+		return TypeString
+	}
 }
 
 // readSheetRows iterates over "row" elements within a worksheet,
@@ -165,6 +195,7 @@ func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) 
 			Column: column,
 			Row:    index,
 			Value:  val,
+			Type:   x.getCellType(rawCell),
 		})
 	}
 
