@@ -36,10 +36,14 @@ type Cell struct {
 	Value  string
 }
 
+func (c Cell) ColumnIndex() int {
+	return asIndex(c.Column)
+}
+
 // getCellValue interrogates a raw cell to get a textual representation of the cell's contents.
 // Numerical values are returned in their string format.
 // Dates are returned as an ISO YYYY-MM-DD formatted string.
-// Datetimes are returned in RFC3339 (ISO-8601) YYYY-MM-DDTHH:MM:SSZ formated string.
+// Datetimes are returned in RFC3339 (ISO-8601) YYYY-MM-DDTHH:MM:SSZ formatted string.
 func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 	if r.Type == "inlineStr" {
 		if r.InlineString == nil {
@@ -182,7 +186,7 @@ func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) 
 //
 // Notes:
 // Xlsx sheets may omit cells which are empty, meaning a row may not have continuous cell
-// references. This function makes not attempt to fill/pad the missing cells.
+// references. This function makes no attempt to fill/pad the missing cells.
 func (x *XlsxFile) ReadRows(sheet string) chan Row {
 	rowChannel := make(chan Row)
 	go x.readSheetRows(sheet, rowChannel)
@@ -202,4 +206,14 @@ func removeNonAlpha(r rune) rune {
 	}
 	// drop the rune
 	return -1
+}
+
+// cell name to cell index. 'A' -> 0, 'Z' -> 25, 'AA' -> 26
+func asIndex(s string) int {
+	index := 0
+	for _, c := range []rune(s) {
+		index *= 26
+		index += int(c) - 'A' + 1
+	}
+	return index - 1
 }
