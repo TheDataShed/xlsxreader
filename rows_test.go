@@ -205,6 +205,23 @@ func TestRemoveNonAlpha(t *testing.T) {
 	}
 }
 
+var columnIndexTests = []struct {
+	Cell     Cell
+	Expected int
+}{
+	{Cell: Cell{Column: "A", Row: 123}, Expected: 0},
+	{Cell: Cell{Column: "D", Row: 123}, Expected: 3},
+	{Cell: Cell{Column: "E", Row: 123}, Expected: 4},
+}
+
+func TestColumnIndex(t *testing.T) {
+	for _, test := range columnIndexTests {
+		t.Run(test.Cell.Column, func(t *testing.T) {
+			require.Equal(t, test.Expected, test.Cell.ColumnIndex())
+		})
+	}
+}
+
 var parseRawCellsTests = []struct {
 	Name     string
 	Error    string
@@ -281,4 +298,29 @@ func TestReadingFileContents(t *testing.T) {
 			{Column: "C", Row: 3, Value: "m", Type: TypeString},
 		}},
 	}, rows)
+}
+
+func TestColumnRefs(t *testing.T) {
+	for _, cas := range []struct {
+		Column string
+		Index  int
+	}{
+		{"A", 0},
+		{"B", 1},
+		{"Z", 25},
+		{"AA", 26},
+		{"AB", 27},
+		{"AZ", 51},
+		{"BA", 52},
+		{"BB", 53},
+		{"ZZ", 701},
+		{"AAA", 702},
+		{"AAB", 703},
+		{"ABA", 728},
+		{"BAA", 1378},
+		{"ZZZ", 18277},
+		{"AAAA", 18278},
+	} {
+		require.Equal(t, cas.Index, asIndex(cas.Column), "%s: %d", cas.Column, cas.Index)
+	}
 }
