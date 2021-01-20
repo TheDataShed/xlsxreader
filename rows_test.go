@@ -19,6 +19,7 @@ var invalidValue = "wat"
 var sharedString = "2"
 var offsetTooHighSharedString = "32"
 var dateString = "2005-06-04"
+var boolString = "1"
 
 var cellValueTests = []struct {
 	Name     string
@@ -82,6 +83,11 @@ var cellValueTests = []struct {
 		Expected: dateString,
 	},
 	{
+		Name:     "Boolean type",
+		Cell:     rawCell{Type: "b", Value: &boolString},
+		Expected: boolString,
+	},
+	{
 		Name:  "No Inline String or Value",
 		Cell:  rawCell{Type: "s", Reference: "C23"},
 		Error: "Unable to get cell value for cell C23 - no value element found",
@@ -99,6 +105,62 @@ func TestGettingValueFromRawCell(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, test.Expected, val)
 			}
+		})
+	}
+}
+
+var cellTypeTests = []struct {
+	Name     string
+	Cell     rawCell
+	Expected CellType
+}{
+	{
+		Name:     "Valid Inline String",
+		Cell:     rawCell{Type: "inlineStr", InlineString: &inlineStr},
+		Expected: TypeString,
+	},
+	{
+		Name:     "Valid Date",
+		Cell:     rawCell{Type: "n", Value: &dateValue, Style: 1},
+		Expected: TypeDateTime,
+	},
+	{
+		Name:     "Valid Date Without Type",
+		Cell:     rawCell{Value: &dateValue, Style: 1},
+		Expected: TypeDateTime,
+	},
+	{
+		Name:     "Valid Shared String",
+		Cell:     rawCell{Type: "s", Value: &sharedString},
+		Expected: TypeString,
+	},
+	{
+		Name:     "Unknown type",
+		Cell:     rawCell{Type: "potato", Value: &inlineStr},
+		Expected: TypeString,
+	},
+	{
+		Name:     "Date type",
+		Cell:     rawCell{Type: "d", Style: 1, Value: &dateString},
+		Expected: TypeDateTime,
+	},
+	{
+		Name:     "Boolean type",
+		Cell:     rawCell{Type: "b", Value: &boolString},
+		Expected: TypeBoolean,
+	},
+	{
+		Name:     "No type",
+		Cell:     rawCell{Type: "", Value: &sharedString},
+		Expected: TypeNumerical,
+	},
+}
+
+func TestGettingTypeFromRawCell(t *testing.T) {
+	for _, test := range cellTypeTests {
+		t.Run(test.Name, func(t *testing.T) {
+			typ := testFile.getCellType(test.Cell)
+			require.Equal(t, test.Expected, typ)
 		})
 	}
 }
@@ -188,8 +250,8 @@ var parseRawCellsTests = []struct {
 			{Reference: "E123", Type: "inlineStr", InlineString: &inlineStr},
 		},
 		Expected: []Cell{
-			{Column: "D", Row: 123, Value: "The meaning of life"},
-			{Column: "E", Row: 123, Value: "The meaning of life"},
+			{Column: "D", Row: 123, Value: "The meaning of life", Type: TypeString},
+			{Column: "E", Row: 123, Value: "The meaning of life", Type: TypeString},
 		},
 	},
 }
@@ -221,19 +283,19 @@ func TestReadingFileContents(t *testing.T) {
 
 	require.Equal(t, []Row{
 		{Index: 1, Cells: []Cell{
-			{Column: "A", Row: 1, Value: "rec_id"},
-			{Column: "B", Row: 1, Value: "culture"},
-			{Column: "C", Row: 1, Value: "sex"},
+			{Column: "A", Row: 1, Value: "rec_id", Type: TypeString},
+			{Column: "B", Row: 1, Value: "culture", Type: TypeString},
+			{Column: "C", Row: 1, Value: "sex", Type: TypeString},
 		}},
 		{Index: 2, Cells: []Cell{
-			{Column: "A", Row: 2, Value: "rec-67374-org"},
-			{Column: "B", Row: 2, Value: "usa"},
-			{Column: "C", Row: 2, Value: "f"},
+			{Column: "A", Row: 2, Value: "rec-67374-org", Type: TypeString},
+			{Column: "B", Row: 2, Value: "usa", Type: TypeString},
+			{Column: "C", Row: 2, Value: "f", Type: TypeString},
 		}},
 		{Index: 3, Cells: []Cell{
-			{Column: "A", Row: 3, Value: "rec-171273-org"},
-			{Column: "B", Row: 3, Value: "ara"},
-			{Column: "C", Row: 3, Value: "m"},
+			{Column: "A", Row: 3, Value: "rec-171273-org", Type: TypeString},
+			{Column: "B", Row: 3, Value: "ara", Type: TypeString},
+			{Column: "C", Row: 3, Value: "m", Type: TypeString},
 		}},
 	}, rows)
 }
