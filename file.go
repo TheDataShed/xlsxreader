@@ -83,6 +83,24 @@ func OpenFile(filename string) (*XlsxFileCloser, error) {
 	}, nil
 }
 
+// OpenReaderZip takes the zip ReadCloser of an XLSX file and returns a populated XlsxFileCloser struct for it.
+// If the file cannot be found, or key parts of the files contents are missing, an error
+// is returned.
+// Note that the file must be Close()-d when you are finished with it.
+func OpenReaderZip(rc *zip.ReadCloser) (*XlsxFileCloser, error) {
+	x := new(XlsxFile)
+
+	if err := x.init(&rc.Reader); err != nil {
+		rc.Close()
+		return nil, err
+	}
+
+	return &XlsxFileCloser{
+		XlsxFile:      *x,
+		zipReadCloser: rc,
+	}, nil
+}
+
 // NewReader takes bytes of Xlsx file and returns a populated XlsxFile struct for it.
 // If the file cannot be found, or key parts of the files contents are missing, an error
 // is returned.
@@ -95,6 +113,19 @@ func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
 	x := new(XlsxFile)
 	err = x.init(r)
 	if err != nil {
+		return nil, err
+	}
+
+	return x, nil
+}
+
+// NewReaderZip takes zip reader of Xlsx file and returns a populated XlsxFile struct for it.
+// If the file cannot be found, or key parts of the files contents are missing, an error
+// is returned.
+func NewReaderZip(r *zip.Reader) (*XlsxFile, error) {
+	x := new(XlsxFile)
+
+	if err := x.init(r); err != nil {
 		return nil, err
 	}
 

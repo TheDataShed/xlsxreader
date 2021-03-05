@@ -53,6 +53,18 @@ func TestOpeningXlsxFile(t *testing.T) {
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, f.Sheets)
 }
 
+func TestOpeningZipReadCloser(t *testing.T) {
+	zrc, err := zip.OpenReader("./test/test-small.xlsx")
+	require.NoError(t, err)
+	defer zrc.Close()
+
+	f, err := OpenReaderZip(zrc)
+	defer f.Close()
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, f.Sheets)
+}
+
 func TestClosingFile(t *testing.T) {
 	actual, err := OpenFile("./test/test-small.xlsx")
 	require.NoError(t, err)
@@ -70,6 +82,23 @@ func TestNewReaderFromXlsxBytes(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, actual.Sheets)
+}
+
+func TestNewZipReader(t *testing.T) {
+	f, err := os.Open("./test/test-small.xlsx")
+	require.NoError(t, err)
+
+	defer f.Close()
+
+	fstat, err := f.Stat()
+	require.NoError(t, err)
+
+	zr, err := zip.NewReader(f, fstat.Size())
+	require.NoError(t, err)
+
+	xlsx, err := NewReaderZip(zr)
+	require.NoError(t, err)
+	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, xlsx.Sheets)
 }
 
 func TestDeletedSheet(t *testing.T) {
