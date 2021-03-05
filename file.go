@@ -19,7 +19,7 @@ type XlsxFile struct {
 
 // XlsxFileCloser wraps XlsxFile to be able to close an open file
 type XlsxFileCloser struct {
-	zipReadCloser zip.ReadCloser
+	zipReadCloser *zip.ReadCloser
 	XlsxFile
 }
 
@@ -72,14 +72,14 @@ func OpenFile(filename string) (*XlsxFileCloser, error) {
 
 	x := new(XlsxFile)
 
-	if err := x.init(zipFile.Reader); err != nil {
+	if err := x.init(&zipFile.Reader); err != nil {
 		zipFile.Close()
 		return nil, err
 	}
 
 	return &XlsxFileCloser{
 		XlsxFile:      *x,
-		zipReadCloser: *zipFile,
+		zipReadCloser: zipFile,
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
 	}
 
 	x := new(XlsxFile)
-	err = x.init(*r)
+	err = x.init(r)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
 	return x, nil
 }
 
-func (x *XlsxFile) init(zipReader zip.Reader) error {
+func (x *XlsxFile) init(zipReader *zip.Reader) error {
 	sharedStrings, err := getSharedStrings(zipReader.File)
 	if err != nil {
 		return err
