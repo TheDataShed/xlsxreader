@@ -4,15 +4,41 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"errors"
+	"io"
+	"strconv"
 	"strings"
 )
 
-// sharedStrings is a struct that holds the values of the shared strings.
-type sharedStrings struct {
-	Values []struct {
-		Text     string   `xml:"t"`
-		RichText []string `xml:"r>t"`
-	} `xml:"si"`
+// sharedStringsValue is a struct that holds the value of the shared strings.
+type sharedStringsValue struct {
+	Text     string   `xml:"t"`
+	RichText []string `xml:"r>t"`
+}
+
+// String gets a string value from the raw sharedStringsValue struct.
+// Since the values can appear in many different places in the xml structure, we need to normalise this.
+// They can either be:
+// <si> <t> value </t> </si>
+// or
+// <si> <r> <t> val </t> </r> <r> <t> ue </t> </r> </si>
+func (sv *sharedStringsValue) String() string {
+	// fast path: no rich text, just return text
+	if len(sv.RichText) == 0 {
+		return sv.Text
+	}
+
+	var sb strings.Builder
+	for _, t := range sv.RichText {
+		sb.WriteString(t)
+	}
+
+	return sb.String()
+}
+
+// Reset zeroes data inside struct.
+func (sv *sharedStringsValue) Reset() {
+	sv.Text = ""
+	sv.RichText = sv.RichText[0:]
 }
 
 // Sentinel error to indicate that no shared strings file can be found
@@ -31,28 +57,6 @@ func getSharedStringsFile(files []*zip.File) (*zip.File, error) {
 	return nil, errNoSharedStrings
 }
 
-// getPopulatedValues gets a list of string values from the raw sharedStrings struct.
-// Since the values can appear in many different places in the xml structure, we need to normalise this.
-// They can either be:
-// <si> <t> value </t> </si>
-// or
-// <si> <r> <t> val </t> </r> <r> <t> ue </t> </r> </si>
-func getPopulatedValues(ss sharedStrings) []string {
-	populated := make([]string, len(ss.Values))
-
-	for i, val := range ss.Values {
-		var sb strings.Builder
-
-		sb.WriteString(val.Text)
-		for _, t := range val.RichText {
-			sb.WriteString(t)
-		}
-		populated[i] = sb.String()
-	}
-
-	return populated
-}
-
 // getSharedStrings loads the contents of the shared string file into memory.
 // This serves as a large lookup table of values, so we can efficiently parse rows.
 func getSharedStrings(files []*zip.File) ([]string, error) {
@@ -64,16 +68,65 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := readFile(ssFile)
+
+	f, err := ssFile.Open()
 	if err != nil {
 		return nil, err
 	}
 
-	var ss sharedStrings
-	err = xml.Unmarshal(data, &ss)
-	if err != nil {
-		return nil, err
+	defer f.Close()
+
+	var (
+		sharedStrings []string
+		value         sharedStringsValue
+	)
+
+	dec := xml.NewDecoder(f)
+	for {
+		token, err := dec.Token()
+		switch err {
+		case nil:
+		case io.EOF:
+			return sharedStrings, nil
+		default:
+			return nil, err
+		}
+
+		startElement, ok := token.(xml.StartElement)
+		if !ok {
+			continue
+		}
+
+		if sharedStrings == nil { // don't use len() == 0 here!
+			sharedStrings = makeSharedStringsSlice(startElement)
+			continue
+		}
+
+		value.Reset()
+		if err := dec.DecodeElement(&value, &startElement); err != nil {
+			return nil, err
+		}
+
+		sharedStrings = append(sharedStrings, value.String())
+	}
+}
+
+// makeSharedStringsSlice allocates shared strings slice according to 'count' attribute of root tag
+// absence of attribute doesn't break flow because make(..., 0) is valid
+func makeSharedStringsSlice(rootElem xml.StartElement) []string {
+	var count int
+	for _, attr := range rootElem.Attr {
+		if attr.Name.Local != "count" {
+			continue
+		}
+
+		var err error
+
+		count, err = strconv.Atoi(attr.Value)
+		if err != nil {
+			return make([]string, 0)
+		}
 	}
 
-	return getPopulatedValues(ss), nil
+	return make([]string, 0, count)
 }
