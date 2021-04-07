@@ -15,6 +15,80 @@ type sharedStringsValue struct {
 	RichText []string `xml:"r>t"`
 }
 
+func (sv *sharedStringsValue) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+
+		var se xml.StartElement
+
+		switch el := tok.(type) {
+		case xml.StartElement:
+			se = el
+		case xml.EndElement:
+			if el == start.End() {
+				// shared strings ended
+
+				return nil
+			}
+
+			continue
+		default:
+			continue
+		}
+
+		switch se.Name.Local {
+		case "t":
+			sv.Text, err = getCharData(d)
+		case "r":
+			err = sv.decodeRichText(d, se)
+		default:
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+}
+
+func (sv *sharedStringsValue) decodeRichText(d *xml.Decoder, start xml.StartElement) error {
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+
+		var se xml.StartElement
+
+		switch el := tok.(type) {
+		case xml.StartElement:
+			se = el
+		case xml.EndElement:
+			if el == start.End() {
+				return nil
+			}
+			continue
+		default:
+			continue
+		}
+
+		if se.Name.Local != "t" {
+			continue
+		}
+
+		var s string
+
+		if s, err = getCharData(d); err != nil {
+			return err
+		}
+
+		sv.RichText = append(sv.RichText, s)
+	}
+}
+
 // String gets a string value from the raw sharedStringsValue struct.
 // Since the values can appear in many different places in the xml structure, we need to normalise this.
 // They can either be:
@@ -103,7 +177,7 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 		}
 
 		value.Reset()
-		if err := dec.DecodeElement(&value, &startElement); err != nil {
+		if err := value.UnmarshalXML(dec, startElement); err != nil {
 			return nil, err
 		}
 

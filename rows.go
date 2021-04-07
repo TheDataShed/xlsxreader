@@ -13,6 +13,51 @@ type rawRow struct {
 	RawCells []rawCell `xml:"c"`
 }
 
+func (rr *rawRow) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Local != "r" {
+			continue
+		}
+
+		var err error
+
+		if rr.Index, err = strconv.Atoi(attr.Value); err != nil {
+			return err
+		}
+	}
+
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+
+		var se xml.StartElement
+
+		switch el := tok.(type) {
+		case xml.StartElement:
+			se = el
+		case xml.EndElement:
+			if el == start.End() {
+				return nil
+			}
+		default:
+			continue
+		}
+
+		if se.Name.Local != "c" {
+			continue
+		}
+
+		var rc rawCell
+		if err = rc.UnmarshalXML(d, se); err != nil {
+			return err
+		}
+
+		rr.RawCells = append(rr.RawCells, rc)
+	}
+}
+
 // rawCell represents the raw XML element for parsing a cell.
 type rawCell struct {
 	Reference    string  `xml:"r,attr"` // E.g. A1
@@ -20,6 +65,99 @@ type rawCell struct {
 	Value        *string `xml:"v,omitempty"`
 	Style        int     `xml:"s,attr"`
 	InlineString *string `xml:"is>t"`
+}
+
+func (rc *rawCell) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	// unmarshal attributes
+	for _, attr := range start.Attr {
+		switch attr.Name.Local {
+		case "r":
+			rc.Reference = attr.Value
+		case "t":
+			rc.Type = attr.Value
+		case "s":
+			var err error
+
+			if rc.Style, err = strconv.Atoi(attr.Value); err != nil {
+				return err
+			}
+		}
+	}
+
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+
+		var se xml.StartElement
+
+		switch el := tok.(type) {
+		case xml.StartElement:
+			se = el
+		case xml.EndElement:
+			if el == start.End() {
+				return nil
+			}
+			continue
+		default:
+			continue
+		}
+
+		switch se.Name.Local {
+		case "is":
+			err = rc.unmarshalInlineString(d, se)
+		case "v":
+			var v string
+
+			if v, err = getCharData(d); err != nil {
+				return err
+			}
+
+			rc.Value = &v
+		default:
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+}
+
+func (rc *rawCell) unmarshalInlineString(d *xml.Decoder, start xml.StartElement) error {
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+
+		var se xml.StartElement
+
+		switch el := tok.(type) {
+		case xml.StartElement:
+			se = el
+		case xml.EndElement:
+			if el == start.End() {
+				return nil
+			}
+			continue
+		default:
+			continue
+		}
+
+		if se.Name.Local != "t" {
+			continue
+		}
+
+		v, err := getCharData(d)
+		if err != nil {
+			return err
+		}
+
+		rc.InlineString = &v
+		return nil
+	}
 }
 
 // Row represents a row of data read from an Xlsx file, in a consumable format
@@ -157,8 +295,8 @@ func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 // The Row struct returned will contain any errors that occurred either in
 // interrogating values, or in parsing the XML.
 func (x *XlsxFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement) Row {
-	r := rawRow{}
-	err := decoder.DecodeElement(&r, startElement)
+	var r rawRow
+	err := r.UnmarshalXML(decoder, *startElement)
 	if err != nil {
 		return Row{
 			Error: err,
