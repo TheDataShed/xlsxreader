@@ -35,6 +35,8 @@ var dateFormatCodeTests = []struct {
 	{"YYYY-MM-DD", true},
 	{"000,00,00%", false},
 	{"potato", false},
+	{"0;[Red]0", false},
+	{"[Blue][<=100];[Blue][>100]", false},
 	{"", false},
 }
 

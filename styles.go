@@ -3,6 +3,7 @@ package xlsxreader
 import (
 	"archive/zip"
 	"encoding/xml"
+	"regexp"
 	"strings"
 )
 
@@ -35,9 +36,12 @@ func getFormatCode(ID int, numberFormats []numberFormat) string {
 	return ""
 }
 
+var formatGroup = regexp.MustCompile(`\[.+\]`)
+
 // isDateFormatCode determines whether a format code is for a date.
 func isDateFormatCode(formatCode string) bool {
-	return strings.ContainsAny(formatCode, "dmhysDMHYS")
+	c := formatGroup.ReplaceAllString(formatCode, "")
+	return strings.ContainsAny(c, "dmhysDMHYS")
 }
 
 // getDateStylesFromStyleSheet populates a map of all date related styles, based on their
