@@ -37,6 +37,9 @@ var dateFormatCodeTests = []struct {
 	{"potato", false},
 	{"0;[Red]0", false},
 	{"[Blue][<=100];[Blue][>100]", false},
+	{"[mm]:ss", true},
+	{"[Red]hh:dd;[Red]", true},
+	{"0.00E+00", false},
 	{"", false},
 }
 
