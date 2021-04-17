@@ -40,6 +40,10 @@ var dateFormatCodeTests = []struct {
 	{"[mm]:ss", true},
 	{"[Red]hh:dd;[Red]", true},
 	{"0.00E+00", false},
+	{`0.00" YYY"`, false},
+	{`"Y"YYYY"Y"`, true},
+	{`0.00\Y`, false},
+	{`YYYY\YYYYY`, true},
 	{"", false},
 }
 
