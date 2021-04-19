@@ -38,7 +38,7 @@ func (sv *sharedStringsValue) String() string {
 // Reset zeroes data inside struct.
 func (sv *sharedStringsValue) Reset() {
 	sv.Text = ""
-	sv.RichText = sv.RichText[0:]
+	sv.RichText = sv.RichText[:0]
 }
 
 // Sentinel error to indicate that no shared strings file can be found

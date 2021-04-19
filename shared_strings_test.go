@@ -42,4 +42,12 @@ func TestLoadingSharedStrings(t *testing.T) {
 			require.Equal(t, []string{"rec_id", "culture", "sex"}, actual.sharedStrings)
 		})
 	}
+
+	t.Run("bold", func(t *testing.T) {
+		actual, err := OpenFile("./test/test-bold.xlsx")
+		require.NoError(t, err)
+		defer actual.Close()
+
+		require.Equal(t, []string{"Contact ID", "Phone Number"}, actual.sharedStrings)
+	})
 }
