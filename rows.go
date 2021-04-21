@@ -13,7 +13,7 @@ type rawRow struct {
 	RawCells []rawCell `xml:"c"`
 }
 
-func (rr *rawRow) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (rr *rawRow) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Local != "r" {
 			continue
@@ -50,7 +50,7 @@ func (rr *rawRow) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		}
 
 		var rc rawCell
-		if err = rc.UnmarshalXML(d, se); err != nil {
+		if err = rc.unmarshalXML(d, se); err != nil {
 			return err
 		}
 
@@ -67,7 +67,7 @@ type rawCell struct {
 	InlineString *string `xml:"is>t"`
 }
 
-func (rc *rawCell) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (rc *rawCell) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	// unmarshal attributes
 	for _, attr := range start.Attr {
 		switch attr.Name.Local {
@@ -175,15 +175,21 @@ type Cell struct {
 	Type   CellType
 }
 
+// CellType defines the data type of an excel cell
 type CellType string
 
 const (
-	TypeString    CellType = "string"
+	// TypeString is for text cells
+	TypeString CellType = "string"
+	// TypeNumerical is for numerical values
 	TypeNumerical CellType = "numerical"
-	TypeDateTime  CellType = "datetime"
-	TypeBoolean   CellType = "boolean"
+	// TypeDateTime is for date values
+	TypeDateTime CellType = "datetime"
+	// TypeBoolean is for true/false values
+	TypeBoolean CellType = "boolean"
 )
 
+// ColumnIndex gives a number, representing the column the cell lies beneath.
 func (c Cell) ColumnIndex() int {
 	return asIndex(c.Column)
 }
@@ -195,13 +201,13 @@ func (c Cell) ColumnIndex() int {
 func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 	if r.Type == "inlineStr" {
 		if r.InlineString == nil {
-			return "", fmt.Errorf("Cell had type of InlineString, but the InlineString attribute was missing")
+			return "", fmt.Errorf("cell had type of InlineString, but the InlineString attribute was missing")
 		}
 		return *r.InlineString, nil
 	}
 
 	if r.Value == nil {
-		return "", fmt.Errorf("Unable to get cell value for cell %s - no value element found", r.Reference)
+		return "", fmt.Errorf("unable to get cell value for cell %s - no value element found", r.Reference)
 	}
 
 	if r.Type == "s" {
@@ -210,7 +216,7 @@ func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 			return "", err
 		}
 		if len(x.sharedStrings) <= index {
-			return "", fmt.Errorf("Attempted to index value %d in shared strings of length %d",
+			return "", fmt.Errorf("attempted to index value %d in shared strings of length %d",
 				index, len(x.sharedStrings))
 		}
 
@@ -256,7 +262,7 @@ func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 	file, ok := x.sheetFiles[sheet]
 	if !ok {
 		ch <- Row{
-			Error: fmt.Errorf("Unable to open sheet %s", sheet),
+			Error: fmt.Errorf("unable to open sheet %s", sheet),
 		}
 		return
 	}
@@ -296,7 +302,7 @@ func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 // interrogating values, or in parsing the XML.
 func (x *XlsxFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement) Row {
 	var r rawRow
-	err := r.UnmarshalXML(decoder, *startElement)
+	err := r.unmarshalXML(decoder, *startElement)
 	if err != nil {
 		return Row{
 			Error: err,
@@ -380,7 +386,7 @@ func removeNonAlpha(r rune) rune {
 // cell name to cell index. 'A' -> 0, 'Z' -> 25, 'AA' -> 26
 func asIndex(s string) int {
 	index := 0
-	for _, c := range []rune(s) {
+	for _, c := range s {
 		index *= 26
 		index += int(c) - 'A' + 1
 	}

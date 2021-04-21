@@ -3,14 +3,14 @@ package xlsxreader
 import "encoding/xml"
 
 func getCharData(d *xml.Decoder) (string, error) {
-	tok, err := d.RawToken()
+	rawToken, err := d.RawToken()
 	if err != nil {
 		return "", err
 	}
 
-	cdata, ok := tok.(xml.CharData)
+	cdata, ok := rawToken.(xml.CharData)
 	if !ok {
-		return "", xml.UnmarshalError("unexpected token where chardata expected")
+		return "", xml.UnmarshalError("expected chardata to be present, but none was found")
 	}
 
 	return string(cdata), nil

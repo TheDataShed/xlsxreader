@@ -15,7 +15,7 @@ type sharedStringsValue struct {
 	RichText []string `xml:"r>t"`
 }
 
-func (sv *sharedStringsValue) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (sv *sharedStringsValue) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for {
 		tok, err := d.Token()
 		if err != nil {
@@ -29,11 +29,8 @@ func (sv *sharedStringsValue) UnmarshalXML(d *xml.Decoder, start xml.StartElemen
 			se = el
 		case xml.EndElement:
 			if el == start.End() {
-				// shared strings ended
-
 				return nil
 			}
-
 			continue
 		default:
 			continue
@@ -116,7 +113,7 @@ func (sv *sharedStringsValue) Reset() {
 }
 
 // Sentinel error to indicate that no shared strings file can be found
-var errNoSharedStrings = errors.New("No shared strings file exists")
+var errNoSharedStrings = errors.New("no shared strings file exists")
 
 // getSharedStringsFile attempts to find and return the zip.File struct associated with the
 // shared strings section of an xlsx file. An error is returned if the sharedStrings file
@@ -177,7 +174,7 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 		}
 
 		value.Reset()
-		if err := value.UnmarshalXML(dec, startElement); err != nil {
+		if err := value.unmarshalXML(dec, startElement); err != nil {
 			return nil, err
 		}
 
@@ -198,7 +195,7 @@ func makeSharedStringsSlice(rootElem xml.StartElement) []string {
 
 		count, err = strconv.Atoi(attr.Value)
 		if err != nil {
-			return make([]string, 0)
+			return []string{}
 		}
 	}
 
