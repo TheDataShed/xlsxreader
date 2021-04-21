@@ -36,7 +36,7 @@ func getFormatCode(ID int, numberFormats []numberFormat) string {
 	return ""
 }
 
-var formatGroup = regexp.MustCompile(`\[.+\]`)
+var formatGroup = regexp.MustCompile(`\[.+?\]|\\.|".*?"`)
 
 // isDateFormatCode determines whether a format code is for a date.
 func isDateFormatCode(formatCode string) bool {
