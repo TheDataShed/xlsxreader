@@ -11,7 +11,6 @@ import (
 type XlsxFile struct {
 	Sheets []string
 
-	zipReader     *zip.Reader
 	sheetFiles    map[string]*zip.File
 	sharedStrings []string
 	dateStyles    map[int]bool
@@ -32,7 +31,7 @@ func getFileForName(files []*zip.File, name string) (*zip.File, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("File not found: %s", name)
+	return nil, fmt.Errorf("file not found: %s", name)
 }
 
 // readFile opens and reads the entire contents of a *zip.File into memory.
@@ -70,15 +69,14 @@ func OpenFile(filename string) (*XlsxFileCloser, error) {
 		return nil, err
 	}
 
-	x := new(XlsxFile)
-
+	x := XlsxFile{}
 	if err := x.init(&zipFile.Reader); err != nil {
 		zipFile.Close()
 		return nil, err
 	}
 
 	return &XlsxFileCloser{
-		XlsxFile:      *x,
+		XlsxFile:      x,
 		zipReadCloser: zipFile,
 	}, nil
 }
@@ -88,7 +86,7 @@ func OpenFile(filename string) (*XlsxFileCloser, error) {
 // is returned.
 // Note that the file must be Close()-d when you are finished with it.
 func OpenReaderZip(rc *zip.ReadCloser) (*XlsxFileCloser, error) {
-	x := new(XlsxFile)
+	x := XlsxFile{}
 
 	if err := x.init(&rc.Reader); err != nil {
 		rc.Close()
@@ -96,7 +94,7 @@ func OpenReaderZip(rc *zip.ReadCloser) (*XlsxFileCloser, error) {
 	}
 
 	return &XlsxFileCloser{
-		XlsxFile:      *x,
+		XlsxFile:      x,
 		zipReadCloser: rc,
 	}, nil
 }
@@ -110,26 +108,26 @@ func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
 		return nil, err
 	}
 
-	x := new(XlsxFile)
+	x := XlsxFile{}
 	err = x.init(r)
 	if err != nil {
 		return nil, err
 	}
 
-	return x, nil
+	return &x, nil
 }
 
 // NewReaderZip takes zip reader of Xlsx file and returns a populated XlsxFile struct for it.
 // If the file cannot be found, or key parts of the files contents are missing, an error
 // is returned.
 func NewReaderZip(r *zip.Reader) (*XlsxFile, error) {
-	x := new(XlsxFile)
+	x := XlsxFile{}
 
 	if err := x.init(r); err != nil {
 		return nil, err
 	}
 
-	return x, nil
+	return &x, nil
 }
 
 func (x *XlsxFile) init(zipReader *zip.Reader) error {

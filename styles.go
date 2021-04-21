@@ -47,7 +47,7 @@ func isDateFormatCode(formatCode string) bool {
 // getDateStylesFromStyleSheet populates a map of all date related styles, based on their
 // style sheet index.
 func getDateStylesFromStyleSheet(ss *styleSheet) *map[int]bool {
-	dateStyles := make(map[int]bool)
+	dateStyles := map[int]bool{}
 
 	for i, style := range ss.CellStyles {
 		if 14 <= style.NumberFormatID && style.NumberFormatID <= 22 {

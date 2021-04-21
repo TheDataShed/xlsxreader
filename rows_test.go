@@ -35,7 +35,7 @@ var cellValueTests = []struct {
 	{
 		Name:  "Invalid Inline String",
 		Cell:  rawCell{Type: "inlineStr", InlineString: nil},
-		Error: "Cell had type of InlineString, but the InlineString attribute was missing",
+		Error: "cell had type of InlineString, but the InlineString attribute was missing",
 	},
 	{
 		Name:     "Valid Date",
@@ -70,7 +70,7 @@ var cellValueTests = []struct {
 	{
 		Name:  "Invalid (invalid offset) Shared String",
 		Cell:  rawCell{Type: "s", Value: &offsetTooHighSharedString},
-		Error: "Attempted to index value 32 in shared strings of length 4",
+		Error: "attempted to index value 32 in shared strings of length 4",
 	},
 	{
 		Name:     "Unknown type",
@@ -90,7 +90,7 @@ var cellValueTests = []struct {
 	{
 		Name:  "No Inline String or Value",
 		Cell:  rawCell{Type: "s", Reference: "C23"},
-		Error: "Unable to get cell value for cell C23 - no value element found",
+		Error: "unable to get cell value for cell C23 - no value element found",
 	},
 }
 
@@ -169,8 +169,8 @@ var readSheetRowsTests = []struct {
 	SheetName string
 	Error     string
 }{
-	{"worksheetOne", "Unable to open sheet worksheetOne"},
-	{"NonExistent", "Unable to open sheet NonExistent"},
+	{"worksheetOne", "unable to open sheet worksheetOne"},
+	{"NonExistent", "unable to open sheet NonExistent"},
 }
 
 func TestReadSheetRows(t *testing.T) {
@@ -231,7 +231,7 @@ var parseRawCellsTests = []struct {
 }{
 	{
 		Name:  "Invalid Cell",
-		Error: "Cell had type of InlineString, but the InlineString attribute was missing",
+		Error: "cell had type of InlineString, but the InlineString attribute was missing",
 		RawCells: []rawCell{
 			{Type: "inlineStr", InlineString: nil, Value: &inlineStr},
 		},
