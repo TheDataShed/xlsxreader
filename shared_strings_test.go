@@ -36,9 +36,9 @@ func TestLoadingSharedStrings(t *testing.T) {
 	for name, filename := range sharedStringsTests {
 		t.Run(name, func(t *testing.T) {
 			actual, err := OpenFile(filename)
+			require.NoError(t, err)
 			defer actual.Close()
 
-			require.NoError(t, err)
 			require.Equal(t, []string{"rec_id", "culture", "sex"}, actual.sharedStrings)
 		})
 	}

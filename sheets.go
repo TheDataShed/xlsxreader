@@ -39,7 +39,7 @@ func getFileNameFromRelationships(rels []relationship, s sheet) (string, error) 
 			return "xl/" + rel.Target, nil
 		}
 	}
-	return "", fmt.Errorf("Unable to find file with relationship %s", s.RelationshipID)
+	return "", fmt.Errorf("unable to find file with relationship %s", s.RelationshipID)
 }
 
 // getWorksheets loads the workbook.xml file and extracts a list of worksheets, along
@@ -56,7 +56,7 @@ func getWorksheets(files []*zip.File) ([]string, *map[string]*zip.File, error) {
 		return nil, nil, err
 	}
 
-	wb := workbook{}
+	var wb workbook
 	err = xml.Unmarshal(data, &wb)
 	if err != nil {
 		return nil, nil, err
@@ -77,7 +77,7 @@ func getWorksheets(files []*zip.File) ([]string, *map[string]*zip.File, error) {
 		return nil, nil, err
 	}
 
-	wsFileMap := make(map[string]*zip.File)
+	wsFileMap := map[string]*zip.File{}
 	sheetNames := make([]string, len(wb.Sheets))
 
 	for i, sheet := range wb.Sheets {

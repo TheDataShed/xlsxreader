@@ -28,28 +28,26 @@ func TestGettingFileByNameFailure(t *testing.T) {
 
 	_, err := getFileForName(zipFiles, "OOPS")
 
-	require.EqualError(t, err, "File not found: OOPS")
+	require.EqualError(t, err, "file not found: OOPS")
 
 }
 
 func TestOpeningMissingFile(t *testing.T) {
-	f, err := OpenFile("this_doesnt_exist.zip")
-	defer f.Close()
-
+	_, err := OpenFile("this_doesnt_exist.zip")
 	require.EqualError(t, err, "open this_doesnt_exist.zip: no such file or directory")
 }
 
 func TestHandlingSpuriousWorkbookLinks(t *testing.T) {
 	f, err := OpenFile("./test/test-xl-relationship-prefix.xlsx")
-	defer f.Close()
 	require.NoError(t, err)
+	defer f.Close()
 }
 
 func TestOpeningXlsxFile(t *testing.T) {
 	f, err := OpenFile("./test/test-small.xlsx")
+	require.NoError(t, err)
 	defer f.Close()
 
-	require.NoError(t, err)
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, f.Sheets)
 }
 
@@ -59,9 +57,9 @@ func TestOpeningZipReadCloser(t *testing.T) {
 	defer zrc.Close()
 
 	f, err := OpenReaderZip(zrc)
+	require.NoError(t, err)
 	defer f.Close()
 
-	require.NoError(t, err)
 	require.Equal(t, []string{"datarefinery_groundtruth_400000"}, f.Sheets)
 }
 
@@ -73,7 +71,8 @@ func TestClosingFile(t *testing.T) {
 }
 
 func TestNewReaderFromXlsxBytes(t *testing.T) {
-	f, _ := os.Open("./test/test-small.xlsx")
+	f, err := os.Open("./test/test-small.xlsx")
+	require.NoError(t, err)
 	defer f.Close()
 
 	b, _ := ioutil.ReadAll(f)
