@@ -22,14 +22,14 @@ func (rr *rawRow) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		var err error
 
 		if rr.Index, err = strconv.Atoi(attr.Value); err != nil {
-			return err
+			return fmt.Errorf("unable to parse row index: %w", err)
 		}
 	}
 
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving xml token: %w", err)
 		}
 
 		var se xml.StartElement
@@ -51,7 +51,7 @@ func (rr *rawRow) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 		var rc rawCell
 		if err = rc.unmarshalXML(d, se); err != nil {
-			return err
+			return fmt.Errorf("unable to unmarshal cell: %w", err)
 		}
 
 		rr.RawCells = append(rr.RawCells, rc)
@@ -87,7 +87,7 @@ func (rc *rawCell) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving xml token: %w", err)
 		}
 
 		var se xml.StartElement
@@ -120,7 +120,7 @@ func (rc *rawCell) unmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to parse cell data: %w", err)
 		}
 	}
 }
@@ -129,7 +129,7 @@ func (rc *rawCell) unmarshalInlineString(d *xml.Decoder, start xml.StartElement)
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving xml token: %w", err)
 		}
 
 		var se xml.StartElement
@@ -152,7 +152,7 @@ func (rc *rawCell) unmarshalInlineString(d *xml.Decoder, start xml.StartElement)
 
 		v, err := getCharData(d)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to parse string: %w", err)
 		}
 
 		rc.InlineString = &v
@@ -246,8 +246,7 @@ func (x *XlsxFile) getCellType(r rawCell) CellType {
 		return TypeDateTime
 	case "n", "":
 		return TypeNumerical
-	case "s",
-		"inlineStr":
+	case "s", "inlineStr":
 		return TypeString
 	default:
 		return TypeString
@@ -284,7 +283,6 @@ func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 		}
 
 		switch startElement := token.(type) {
-
 		case xml.StartElement:
 			if startElement.Name.Local == "row" {
 				row := x.parseRow(decoder, &startElement)

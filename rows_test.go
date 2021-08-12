@@ -13,13 +13,15 @@ var testFile = XlsxFile{
 	dateStyles:    map[int]bool{1: true, 3: true},
 }
 
-var inlineStr = "The meaning of life"
-var dateValue = "43489.25"
-var invalidValue = "wat"
-var sharedString = "2"
-var offsetTooHighSharedString = "32"
-var dateString = "2005-06-04"
-var boolString = "1"
+var (
+	inlineStr                 = "The meaning of life"
+	dateValue                 = "43489.25"
+	invalidValue              = "wat"
+	sharedString              = "2"
+	offsetTooHighSharedString = "32"
+	dateString                = "2005-06-04"
+	boolString                = "1"
+)
 
 var cellValueTests = []struct {
 	Name     string
@@ -100,7 +102,8 @@ func TestGettingValueFromRawCell(t *testing.T) {
 			val, err := testFile.getCellValue(test.Cell)
 
 			if test.Error != "" {
-				require.EqualError(t, err, test.Error)
+				require.Error(t, err)
+				require.Contains(t, err.Error(), test.Error)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, test.Expected, val)
