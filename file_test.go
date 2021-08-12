@@ -29,12 +29,12 @@ func TestGettingFileByNameFailure(t *testing.T) {
 	_, err := getFileForName(zipFiles, "OOPS")
 
 	require.EqualError(t, err, "file not found: OOPS")
-
 }
 
 func TestOpeningMissingFile(t *testing.T) {
 	_, err := OpenFile("this_doesnt_exist.zip")
-	require.EqualError(t, err, "open this_doesnt_exist.zip: no such file or directory")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "open this_doesnt_exist.zip: no such file or directory")
 }
 
 func TestHandlingSpuriousWorkbookLinks(t *testing.T) {

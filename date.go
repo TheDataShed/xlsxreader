@@ -1,6 +1,7 @@
 package xlsxreader
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -23,7 +24,7 @@ var excelEpoch = time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC)
 func convertExcelDateToDateString(value string) (string, error) {
 	floatValue, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to parse date float value: %w", err)
 	}
 
 	numberOfDays := math.Trunc(floatValue)

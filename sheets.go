@@ -49,32 +49,32 @@ func getFileNameFromRelationships(rels []relationship, s sheet) (string, error) 
 func getWorksheets(files []*zip.File) ([]string, *map[string]*zip.File, error) {
 	wbFile, err := getFileForName(files, "xl/workbook.xml")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to get workbook file: %w", err)
 	}
 	data, err := readFile(wbFile)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to read workbook file: %w", err)
 	}
 
 	var wb workbook
 	err = xml.Unmarshal(data, &wb)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to parse workbook file: %w", err)
 	}
 
 	relsFile, err := getFileForName(files, "xl/_rels/workbook.xml.rels")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to get relationships file: %w", err)
 	}
 	relsData, err := readFile(relsFile)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to read relationships file: %w", err)
 	}
 
 	rels := relationships{}
 	err = xml.Unmarshal(relsData, &rels)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to parse relationships file: %w", err)
 	}
 
 	wsFileMap := map[string]*zip.File{}
@@ -83,11 +83,11 @@ func getWorksheets(files []*zip.File) ([]string, *map[string]*zip.File, error) {
 	for i, sheet := range wb.Sheets {
 		sheetFilename, err := getFileNameFromRelationships(rels.Relationships, sheet)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("unable to get file name from relationships: %w", err)
 		}
 		sheetFile, err := getFileForName(files, sheetFilename)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("unable to get file for sheet name %s: %w", sheetFilename, err)
 		}
 
 		wsFileMap[sheet.Name] = sheetFile

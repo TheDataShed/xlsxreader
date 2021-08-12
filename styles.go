@@ -3,6 +3,7 @@ package xlsxreader
 import (
 	"archive/zip"
 	"encoding/xml"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -70,18 +71,18 @@ func getDateStylesFromStyleSheet(ss *styleSheet) *map[int]bool {
 func getDateFormatStyles(files []*zip.File) (*map[int]bool, error) {
 	stylesFile, err := getFileForName(files, "xl/styles.xml")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get styles file: %w", err)
 	}
 
 	data, err := readFile(stylesFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read styles file: %w", err)
 	}
 
 	var ss styleSheet
 	err = xml.Unmarshal(data, &ss)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to parse styles file: %w", err)
 	}
 
 	return getDateStylesFromStyleSheet(&ss), nil

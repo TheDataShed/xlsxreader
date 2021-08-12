@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -19,19 +20,19 @@ func (sv *sharedStringsValue) unmarshalXML(d *xml.Decoder, start xml.StartElemen
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving xml token: %w", err)
 		}
 
 		var se xml.StartElement
 
 		switch el := tok.(type) {
-		case xml.StartElement:
-			se = el
 		case xml.EndElement:
 			if el == start.End() {
 				return nil
 			}
 			continue
+		case xml.StartElement:
+			se = el
 		default:
 			continue
 		}
@@ -46,7 +47,7 @@ func (sv *sharedStringsValue) unmarshalXML(d *xml.Decoder, start xml.StartElemen
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to parse string: %w", err)
 		}
 	}
 }
@@ -55,7 +56,7 @@ func (sv *sharedStringsValue) decodeRichText(d *xml.Decoder, start xml.StartElem
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to get shared strings value token: %w", err)
 		}
 
 		var se xml.StartElement
@@ -79,7 +80,7 @@ func (sv *sharedStringsValue) decodeRichText(d *xml.Decoder, start xml.StartElem
 		var s string
 
 		if s, err = getCharData(d); err != nil {
-			return err
+			return fmt.Errorf("unable to parse string: %w", err)
 		}
 
 		sv.RichText = append(sv.RichText, s)
@@ -137,12 +138,12 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 		return []string{}, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get shared strings file: %w", err)
 	}
 
 	f, err := ssFile.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open shared strings file: %w", err)
 	}
 
 	defer f.Close()
@@ -155,12 +156,11 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 	dec := xml.NewDecoder(f)
 	for {
 		token, err := dec.Token()
-		switch err {
-		case nil:
-		case io.EOF:
+		if err == io.EOF {
 			return sharedStrings, nil
-		default:
-			return nil, err
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error decoding token: %w", err)
 		}
 
 		startElement, ok := token.(xml.StartElement)
@@ -175,7 +175,7 @@ func getSharedStrings(files []*zip.File) ([]string, error) {
 
 		value.Reset()
 		if err := value.unmarshalXML(dec, startElement); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error unmarshaling shared strings value %+v: %w", startElement, err)
 		}
 
 		sharedStrings = append(sharedStrings, value.String())

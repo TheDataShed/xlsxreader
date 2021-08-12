@@ -39,14 +39,14 @@ func getFileForName(files []*zip.File, name string) (*zip.File, error) {
 func readFile(file *zip.File) ([]byte, error) {
 	rc, err := file.Open()
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("unable to open file: %w", err)
 	}
 	defer rc.Close()
 
 	buff := bytes.NewBuffer(nil)
 	_, err = io.Copy(buff, rc)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("unable to copy bytes: %w", err)
 	}
 	return buff.Bytes(), nil
 }
@@ -66,13 +66,13 @@ func (xl *XlsxFileCloser) Close() error {
 func OpenFile(filename string) (*XlsxFileCloser, error) {
 	zipFile, err := zip.OpenReader(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open file reader: %w", err)
 	}
 
 	x := XlsxFile{}
 	if err := x.init(&zipFile.Reader); err != nil {
 		zipFile.Close()
-		return nil, err
+		return nil, fmt.Errorf("unable to initialise file: %w", err)
 	}
 
 	return &XlsxFileCloser{
@@ -105,13 +105,13 @@ func OpenReaderZip(rc *zip.ReadCloser) (*XlsxFileCloser, error) {
 func NewReader(xlsxBytes []byte) (*XlsxFile, error) {
 	r, err := zip.NewReader(bytes.NewReader(xlsxBytes), int64(len(xlsxBytes)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create new reader: %w", err)
 	}
 
 	x := XlsxFile{}
 	err = x.init(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to initialise file: %w", err)
 	}
 
 	return &x, nil
@@ -124,7 +124,7 @@ func NewReaderZip(r *zip.Reader) (*XlsxFile, error) {
 	x := XlsxFile{}
 
 	if err := x.init(r); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to initialise file: %w", err)
 	}
 
 	return &x, nil
@@ -133,17 +133,17 @@ func NewReaderZip(r *zip.Reader) (*XlsxFile, error) {
 func (x *XlsxFile) init(zipReader *zip.Reader) error {
 	sharedStrings, err := getSharedStrings(zipReader.File)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get shared strings: %w", err)
 	}
 
 	sheets, sheetFiles, err := getWorksheets(zipReader.File)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get worksheets: %w", err)
 	}
 
 	dateStyles, err := getDateFormatStyles(zipReader.File)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get date styles: %w", err)
 	}
 
 	x.sharedStrings = sharedStrings

@@ -1,16 +1,20 @@
 package xlsxreader
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 func getCharData(d *xml.Decoder) (string, error) {
-	rawToken, err := d.RawToken()
+	tok, err := d.Token()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to get raw token: %w", err)
 	}
 
-	cdata, ok := rawToken.(xml.CharData)
+	cdata, ok := tok.(xml.CharData)
 	if !ok {
-		return "", xml.UnmarshalError("expected chardata to be present, but none was found")
+		// Valid for no chardata to be present
+		return "", nil
 	}
 
 	return string(cdata), nil
