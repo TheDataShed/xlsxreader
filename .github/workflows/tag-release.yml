@@ -1,0 +1,113 @@
+name: "Tag new release"
+
+on:
+  pull_request_target:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - run: npm install semver@"^7.3.5"
+      - name: Extract tag from comments
+        id: get-tag
+        uses: actions/github-script@v5
+        with:
+          result-encoding: string
+          script: |
+            const semver = require('semver');
+            const tagCommentPrefix = "New Release Tag: ";
+            const query =
+              `
+              query ($owner:String!, $repo:String!, $pr:Int!, $before: String) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $pr) {
+                    comments(last:100, before:$before) {
+                      nodes {
+                        author {
+                          type: __typename
+                          login
+                        }
+                        bodyText
+                      }
+                      pageInfo {
+                        startCursor
+                        hasPreviousPage
+                      }
+                    }
+                  }
+                }
+              }
+              `;
+
+            let hasPrev = true;
+            let beforeCursor = null;
+            while (hasPrev) {
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pr: context.issue.number,
+                before: beforeCursor,
+              });
+
+              const {
+                repository: {
+                  pullRequest: {
+                    comments: {
+                      nodes = [],
+                      pageInfo: {
+                        hasPreviousPage = null,
+                        startCursor = null,
+                      } = {},
+                    } = {},
+                  } = {},
+                } = {},
+              } = result;
+
+              hasPrev = hasPreviousPage;
+              beforeCursor = startCursor;
+
+              const tagComment = nodes.reverse().find(node => {
+                const {
+                  author: {
+                    login = "",
+                    type = "",
+                  } = {},
+                  bodyText = "",
+                } = node;
+
+                return login === "github-actions" &&
+                  type === "Bot" &&
+                  bodyText.startsWith(tagCommentPrefix) &&
+                  semver.valid(bodyText.slice(tagCommentPrefix.length)) !== null;
+              });
+
+              if (tagComment) {
+                return tagComment.bodyText.slice(tagCommentPrefix.length);
+              }
+            }
+
+            return "";
+      - name: Create release
+        uses: actions/github-script@v5
+        env:
+          RELEASE_TAG: ${{ steps.get-tag.outputs.result }}
+        with:
+          script: |
+            const semver = require('semver');
+            const releaseVersion = semver.valid(process.env.RELEASE_TAG);
+            if (releaseVersion === null) {
+              return;
+            }
+
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: "v"+releaseVersion,
+              name: context.issue.name,
+              generate_release_notes: true,
+            });
