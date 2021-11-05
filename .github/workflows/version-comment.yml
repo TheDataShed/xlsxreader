@@ -1,0 +1,28 @@
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  add-version-comment:
+    if: contains(['Bumps Major', 'Bumps Minor', 'Bumps Patch'], github.event.label.name)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check and remove conflicting labels
+        uses: actions/github-script@v5
+        env:
+          ADDED_LABEL: ${{ github.event.label.name }}
+        with:
+          script: |
+            const addedLabel = process.env.ADDED_LABEL;
+            const existingLabels = await github.rest.issues.ListLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const labelsToFilter = ['Bumps Major', 'Bumps Minor', 'Bumps Patch'].filter(label => label !== addedLabel);
+            const conflictingLabels = existingLabels.filter(label => labelsToFilter.indexOf(label) !== -1);
+
+            console.log('conflicting labels: ', conflictingLabels);
