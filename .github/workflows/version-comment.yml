@@ -1,0 +1,97 @@
+name: "Add version comment to PR"
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+
+jobs:
+  add-version-comment:
+    if: contains(fromJSON('["Bumps Major", "Bumps Minor", "Bumps Patch"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check and remove conflicting labels
+        uses: actions/github-script@v5
+        env:
+          ADDED_LABEL: ${{ github.event.label.name }}
+        with:
+          script: |
+            const addedLabel = process.env.ADDED_LABEL;
+            const existingLabels = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const labelsToFilter = ['Bumps Major', 'Bumps Minor', 'Bumps Patch'].filter(label => label !== addedLabel);
+            const conflictingLabels = existingLabels.data.filter(label => labelsToFilter.indexOf(label.name) !== -1);
+
+            await Promise.all(
+              conflictingLabels.map(
+                label => github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label.name,
+                })
+              )
+            );
+      - run: npm install semver@"^7.3.5"
+      - name: Find latest semver tag, bump it
+        id: bump-tag
+        uses: actions/github-script@v5
+        env:
+          ADDED_LABEL: ${{ github.event.label.name }}
+        with:
+          result-encoding: string
+          script: |
+            const semver = require('semver');
+            const addedLabel = process.env.ADDED_LABEL;
+            const tags = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const lastSemverTag = tags.data.
+              map(tag => tag.name).
+              filter(tag => semver.valid(tag) !== null).
+              sort(semver.rcompare).
+              find(tag => true) || 'v0.0.0';
+
+            const newTag = "v"+semver.inc(lastSemverTag, addedLabel.slice("Bumps ".length).toLowerCase());
+
+            return newTag;
+      - name: Add/Update PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: New Release Tag
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          message: |
+            New Release Tag: ${{ steps.bump-tag.outputs.result }}
+  warn-major:
+    if: github.event.label.name == 'Bumps Major'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Warn about major bump
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Major bump warn
+          recreate: true
+          message: |
+            Warning!!! Bumping major version may require new module name suffix in `go.mod`.
+            See https://golang.org/ref/mod#major-version-suffixes for more info.
+  warn-major-remove:
+    if: contains(fromJSON('["Bumps Minor", "Bumps Patch"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Remove major bump warning
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Major bump warn
+          delete: true
