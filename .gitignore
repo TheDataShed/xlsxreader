@@ -41,3 +41,5 @@ test/test
 
 # MacOs
 .DS_Store
+
+.idea
