@@ -326,37 +326,29 @@ func (x *XlsxFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement
 // to interpret the value of any of the cells.
 func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) {
 	cells := []Cell{}
+
 	for i, rawCell := range rawCells {
+		ok := false
 		if rawCell.Value == nil && rawCell.InlineString == nil {
-			// This cell is empty, so ignore it
-			if x.maxCols > 0 {
-				if i > x.maxCols {
-					continue
-				} else {
-					column := strings.Map(removeNonAlpha, rawCell.Reference)
-					cells = append(cells, Cell{
-						Column: column,
-						Row:    index,
-						Value:  "",
-						Type:   x.getCellType(rawCell),
-					})
-				}
-			} else {
+			if (x._maxColumnToKeepEmptyVals == 0) || (x._maxColumnToKeepEmptyVals < i) {
 				continue
+			} else {
+				ok = true
 			}
-		} else {
-			column := strings.Map(removeNonAlpha, rawCell.Reference)
-			val, err := x.getCellValue(rawCell)
-			if err != nil {
-				return nil, err
-			}
-			cells = append(cells, Cell{
-				Column: column,
-				Row:    index,
-				Value:  val,
-				Type:   x.getCellType(rawCell),
-			})
 		}
+		column := strings.Map(removeNonAlpha, rawCell.Reference)
+		val, err := x.getCellValue(rawCell)
+		if err != nil && !ok {
+			return nil, err
+		} else if err != nil && ok {
+			val = ""
+		}
+		cells = append(cells, Cell{
+			Column: column,
+			Row:    index,
+			Value:  val,
+			Type:   x.getCellType(rawCell),
+		})
 
 	}
 

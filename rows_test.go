@@ -339,7 +339,7 @@ func TestMissingDataReadLastCol(t *testing.T) {
 
 	columncount := 0
 	rownumber := 1
-	xl.maxCols = 81
+	xl._maxColumnToKeepEmptyVals = 81
 	// Iterate on the rows of data
 	for row := range xl.ReadRows("Sheet1") {
 		record := []string{}

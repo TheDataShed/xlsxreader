@@ -11,10 +11,10 @@ import (
 type XlsxFile struct {
 	Sheets []string
 
-	sheetFiles    map[string]*zip.File
-	sharedStrings []string
-	dateStyles    map[int]bool
-	maxCols       int
+	sheetFiles                map[string]*zip.File
+	sharedStrings             []string
+	dateStyles                map[int]bool
+	_maxColumnToKeepEmptyVals int
 }
 
 // XlsxFileCloser wraps XlsxFile to be able to close an open file
