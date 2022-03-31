@@ -14,6 +14,7 @@ type XlsxFile struct {
 	sheetFiles    map[string]*zip.File
 	sharedStrings []string
 	dateStyles    map[int]bool
+	maxCols       int
 }
 
 // XlsxFileCloser wraps XlsxFile to be able to close an open file

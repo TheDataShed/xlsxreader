@@ -327,3 +327,33 @@ func TestColumnRefs(t *testing.T) {
 		require.Equal(t, cas.Index, asIndex(cas.Column), "%s: %d", cas.Column, cas.Index)
 	}
 }
+
+func TestMissingDataReadLastCol(t *testing.T) {
+	xl, err := OpenFile("test/parse-failure.xlsx")
+
+	if err != nil {
+		panic(err)
+	}
+	// Ensure the file reader is closed once utilised
+	defer xl.Close()
+
+	columncount := 0
+	rownumber := 1
+	xl.maxCols = 81
+	// Iterate on the rows of data
+	for row := range xl.ReadRows("Sheet1") {
+		record := []string{}
+		for _, cell := range row.Cells {
+			if row.Index == 1 {
+				columncount++
+			}
+			record = append(record, cell.Value)
+
+		}
+		record_len := len(record)
+		require.Equal(t, columncount, record_len, rownumber)
+		rownumber++
+	}
+	require.Equal(t, 14, rownumber)
+	require.Equal(t, 81, columncount)
+}

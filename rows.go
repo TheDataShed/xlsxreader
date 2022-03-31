@@ -326,23 +326,38 @@ func (x *XlsxFile) parseRow(decoder *xml.Decoder, startElement *xml.StartElement
 // to interpret the value of any of the cells.
 func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) {
 	cells := []Cell{}
-	for _, rawCell := range rawCells {
+	for i, rawCell := range rawCells {
 		if rawCell.Value == nil && rawCell.InlineString == nil {
 			// This cell is empty, so ignore it
-			continue
-		}
-		column := strings.Map(removeNonAlpha, rawCell.Reference)
-		val, err := x.getCellValue(rawCell)
-		if err != nil {
-			return nil, err
+			if x.maxCols > 0 {
+				if i > x.maxCols {
+					continue
+				} else {
+					column := strings.Map(removeNonAlpha, rawCell.Reference)
+					cells = append(cells, Cell{
+						Column: column,
+						Row:    index,
+						Value:  "",
+						Type:   x.getCellType(rawCell),
+					})
+				}
+			} else {
+				continue
+			}
+		} else {
+			column := strings.Map(removeNonAlpha, rawCell.Reference)
+			val, err := x.getCellValue(rawCell)
+			if err != nil {
+				return nil, err
+			}
+			cells = append(cells, Cell{
+				Column: column,
+				Row:    index,
+				Value:  val,
+				Type:   x.getCellType(rawCell),
+			})
 		}
 
-		cells = append(cells, Cell{
-			Column: column,
-			Row:    index,
-			Value:  val,
-			Type:   x.getCellType(rawCell),
-		})
 	}
 
 	return cells, nil
