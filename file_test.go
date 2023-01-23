@@ -107,3 +107,38 @@ func TestDeletedSheet(t *testing.T) {
 	err = actual.Close()
 	require.NoError(t, err)
 }
+
+func TestGetSheetFileForSheetName(t *testing.T) {
+	testFile, err := OpenFile("./test/test-small.xlsx")
+	require.NoError(t, err)
+
+	testData := []struct {
+		tag            string
+		xlsxFile       *XlsxFileCloser
+		inputSheetName string
+		expXlsxFile    *zip.File
+	}{
+		{
+			tag:            "SHEETNAME_FOUND",
+			xlsxFile:       testFile,
+			inputSheetName: "datarefinery_groundtruth_400000",
+			expXlsxFile:    testFile.sheetFiles["datarefinery_groundtruth_400000"],
+		},
+		{
+			tag:            "SHEETNAME_NOTFOUND",
+			xlsxFile:       testFile,
+			inputSheetName: "NO SHEET",
+		},
+	}
+
+	for _, td := range testData {
+		t.Run(td.tag, func(t *testing.T) {
+			gotFile := td.xlsxFile.GetSheetFileForSheetName(td.inputSheetName)
+			if td.expXlsxFile == nil {
+				require.Nil(t, gotFile)
+				return
+			}
+			require.Equal(t, td.expXlsxFile.Name, gotFile.Name)
+		})
+	}
+}
