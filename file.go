@@ -51,6 +51,15 @@ func readFile(file *zip.File) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
+// GetSheetFileForSheetName returns the sheet file associated with the sheet name.
+// This is useful when you want to further process something out of the sheet, that this
+// library does not handle. For example this is useful when trying to read the hyperlinks
+// section of a sheet file; getting the sheet file enables you to read the XML directly.
+func (x *XlsxFileCloser) GetSheetFileForSheetName(sheetName string) *zip.File {
+	sheetFile, _ := x.sheetFiles[sheetName]
+	return sheetFile
+}
+
 // Close closes the XlsxFile, rendering it unusable for I/O.
 func (xl *XlsxFileCloser) Close() error {
 	if xl == nil {

@@ -41,3 +41,6 @@ test/test
 
 # MacOs
 .DS_Store
+
+# Editor files
+.idea
