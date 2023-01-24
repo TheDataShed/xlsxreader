@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/thedatashed/xlsxreader"
+	"github.com/nathj07/xlsxreader"
 )
 
 func main() {

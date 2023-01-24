@@ -1,4 +1,4 @@
-module github.com/thedatashed/xlsxreader
+module github.com/nathj07/xlsxreader
 
 go 1.15
 
