@@ -1,8 +1,9 @@
-## Unreleased
+## v1.2.3 (2023-01-25)
 
 ### Feat
 
-- Add version bumping and testing github actions
+- **README**: Update README (#51)
+- Add version bumping and testing github actions (#49)
 
 ## v1.2.2 (2021-08-12)
 
