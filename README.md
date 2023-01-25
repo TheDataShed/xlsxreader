@@ -1,6 +1,6 @@
 <img align="right" width="200" src="./logo.jpeg" alt="xlsxreader logo">
 
-# xlsxreader: A Go package for reading data from an xlsx file
+# xlsxreader: A Go Package for reading data from an xlsx file
 
 ## Overview
 
