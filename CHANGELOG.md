@@ -1,3 +1,9 @@
+## v1.2.4 (2023-01-25)
+
+### Feat
+
+- **workflows**: split release and bumps (#52)
+
 ## v1.2.3 (2023-01-25)
 
 ### Feat
