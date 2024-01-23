@@ -42,7 +42,7 @@ func main() {
     defer xl.Close()
 
     // Iterate on the rows of data
-    for row := range xl.ReadRows(e.Sheets[0]){
+    for row := range xl.ReadRows(xl.Sheets[0]){
     ...
     }
 }
@@ -69,7 +69,7 @@ func main() {
     xl, _ := xlsxreader.NewReader(bytes)
 
     // Iterate on the rows of data
-    for row := range xl.ReadRows(e.Sheets[0]){
+    for row := range xl.ReadRows(xl.Sheets[0]){
     ...
     }
 }
