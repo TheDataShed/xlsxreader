@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sync"
 )
 
 // XlsxFile defines a populated XLSX file struct.
@@ -14,12 +15,16 @@ type XlsxFile struct {
 	sheetFiles    map[string]*zip.File
 	sharedStrings []string
 	dateStyles    map[int]bool
+
+	doneCh chan struct{} // doneCh serves as a signal to abort unfinished operations.
 }
 
 // XlsxFileCloser wraps XlsxFile to be able to close an open file
 type XlsxFileCloser struct {
 	zipReadCloser *zip.ReadCloser
 	XlsxFile
+
+	once sync.Once // once performs actions exactly once, e.g. closing a channel.
 }
 
 // getFileForName finds and returns a *zip.File by it's display name from within an archive.
@@ -65,6 +70,7 @@ func (xl *XlsxFileCloser) Close() error {
 	if xl == nil {
 		return nil
 	}
+	xl.once.Do(func() { close(xl.doneCh) })
 	return xl.zipReadCloser.Close()
 }
 
@@ -159,6 +165,7 @@ func (x *XlsxFile) init(zipReader *zip.Reader) error {
 	x.Sheets = sheets
 	x.sheetFiles = *sheetFiles
 	x.dateStyles = *dateStyles
+	x.doneCh = make(chan struct{})
 
 	return nil
 }
