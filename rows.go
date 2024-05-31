@@ -3,6 +3,7 @@ package xlsxreader
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -258,18 +259,11 @@ func (x *XlsxFile) getCellType(r rawCell) CellType {
 func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 	defer close(ch)
 
-	file, ok := x.sheetFiles[sheet]
-	if !ok {
-		ch <- Row{
-			Error: fmt.Errorf("unable to open sheet %s", sheet),
-		}
-		return
-	}
-
-	xmlFile, err := file.Open()
+	xmlFile, err := x.openSheetFile(sheet)
 	if err != nil {
-		ch <- Row{
-			Error: err,
+		select {
+		case <-x.doneCh:
+		case ch <- Row{Error: err}:
 		}
 		return
 	}
@@ -289,10 +283,22 @@ func (x *XlsxFile) readSheetRows(sheet string, ch chan<- Row) {
 				if len(row.Cells) < 1 && row.Error == nil {
 					continue
 				}
-				ch <- row
+				select {
+				case <-x.doneCh:
+					return
+				case ch <- row:
+				}
 			}
 		}
 	}
+}
+
+func (x *XlsxFile) openSheetFile(sheet string) (io.ReadCloser, error) {
+	file, ok := x.sheetFiles[sheet]
+	if !ok {
+		return nil, fmt.Errorf("unable to open sheet %s", sheet)
+	}
+	return file.Open()
 }
 
 // parseRow parses the raw XML of a row element into a consumable Row struct.
@@ -353,9 +359,9 @@ func (x *XlsxFile) parseRawCells(rawCells []rawCell, index int) ([]Cell, error) 
 // In order to provide a simplistic interface, this method returns a channel that can be
 // range-d over.
 //
-// This method has one notable drawback however - the entire file must be consumed before
-// the channel will be closed. Reading only some of the values will leave an orphaned
-// goroutine and channel behind.
+// If you want to read only some of the values, please ensure that the Close() method is
+// called after processing the entire file to stop all active goroutines and prevent any
+// potential goroutine leaks.
 //
 // Notes:
 // Xlsx sheets may omit cells which are empty, meaning a row may not have continuous cell

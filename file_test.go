@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -141,4 +142,26 @@ func TestGetSheetFileForSheetName(t *testing.T) {
 			require.Equal(t, td.expXlsxFile.Name, gotFile.Name)
 		})
 	}
+}
+
+func TestGoroutineLeaksOnReadRows(t *testing.T) {
+	f, err := OpenFile("test/test-small.xlsx")
+	require.NoError(t, err)
+
+	usedByTest := runtime.NumGoroutine()
+
+	rowChannel := f.ReadRows(f.Sheets[0])
+	n := runtime.NumGoroutine() - usedByTest
+	require.Equal(t, 1, n, "goroutine spawned more than once")
+
+	<-rowChannel // pull one row
+
+	f.Close()    // Close XlsxFile
+	runtime.GC() // Force GC to run
+
+	n = runtime.NumGoroutine() - usedByTest
+	require.Equal(t, 0, n, "goroutine leaks found")
+
+	_, ok := <-rowChannel
+	require.Equal(t, false, ok, "channel should be closed")
 }
