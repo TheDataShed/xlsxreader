@@ -1,3 +1,11 @@
+## v1.2.6 (2024-05-31)
+
+### Fix
+
+- **actions**: update version bumping to release new script
+- potential goroutine leaks on ReadRows (#57)
+- **github-actions**: Add org pat as auth for push (#53)
+
 ## v1.2.5 (2023-01-25)
 
 ### Fix
