@@ -232,6 +232,11 @@ func (x *XlsxFile) getCellValue(r rawCell) (string, error) {
 		return formattedDate, nil
 	}
 
+	v, err := strconv.ParseFloat(*r.Value, 64)
+	if err != nil {
+		return *r.Value, nil
+	}
+	*r.Value = strconv.FormatFloat(v, 'f', -1, 64)
 	return *r.Value, nil
 }
 

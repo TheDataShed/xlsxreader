@@ -8,6 +8,7 @@
 *.out
 c.out
 coverage.html
+.mise.toml
 
 # Test binary, built with `go test -c`
 *.test
