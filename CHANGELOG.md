@@ -1,3 +1,9 @@
+## v1.2.8 (2024-05-31)
+
+### Fix
+
+- retract v1.2.7 published to pkg.go.dev
+
 ## v1.2.6 (2024-05-31)
 
 ### Fix
